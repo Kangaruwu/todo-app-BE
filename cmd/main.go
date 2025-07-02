@@ -2,28 +2,34 @@ package main
 
 import (
 	"context"
-	"go-backend-todo/internal/db"
+	"log"
 
-	"go-backend-todo/internal/api/handlers"
-	"go-backend-todo/internal/api/middlewares"
+	"go-backend-todo/internal/config"
+	"go-backend-todo/internal/db"
+	"go-backend-todo/internal/routes"
 
 	"github.com/gofiber/fiber/v2"
 )
 
 func main() {
-	app := fiber.New()
+	// Load configuration
+	cfg := config.Load()
 
-	app.Get("/", handlers.Hello)
-	app.Use(middlewares.NotFound)
+	// Create a new Fiber app with configuration
+	app := fiber.New(config.GetFiberConfig(cfg))
 
+	// Connect to database
 	db, err := db.Connect()
 	if err != nil {
-		panic(err)
+		log.Fatal("Failed to connect to database:", err)
 	}
 	defer db.Close(context.Background())
 
-	app.Listen(":8080")
+	// Setup routes with configuration
+	routes.SetupRoutes(app, cfg)
 
+	// Start server
+	serverAddr := config.GetServerAddress(cfg)
+	log.Printf("Server starting on %s...", serverAddr)
+	log.Fatal(app.Listen(serverAddr))
 }
-
-

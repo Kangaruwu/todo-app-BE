@@ -1,37 +1,51 @@
 package db
 
 import (
-    "context"
-    "log"
-    "os"
+	"context"
+	"log"
 
-    "github.com/joho/godotenv"
-    "github.com/jackc/pgx/v5"
+	"go-backend-todo/internal/config"
+
+	"github.com/jackc/pgx/v5"
 )
 
+// Connect establishes connection to PostgreSQL database using configuration
 func Connect() (*pgx.Conn, error) {
-    if err := godotenv.Load(); err != nil {
-        log.Println("Warning: .env file not found, using system env")
-    }
+	cfg := config.Load()
+	connStr := config.GetDatabaseURL(cfg)
 
-    connStr := os.Getenv("DATABASE_URL")
-    if connStr == "" {
-        log.Fatal("DATABASE_URL is not set")
-    }
-    ctx := context.Background()
-    db, err := pgx.Connect(ctx, connStr)
+	ctx := context.Background()
+	db, err := pgx.Connect(ctx, connStr)
 	if err != nil {
-        panic(err)
-    }
-    defer db.Close(ctx)
+		return nil, err
+	}
 
-	// Test the connection by querying the database version
-	var version string
-    err = db.QueryRow(context.Background(), "select version()").Scan(&version)
+    dbHealthCheck(db)
+	return db, nil
+}
+
+// ConnectWithConfig connects using specific configuration
+func ConnectWithConfig(cfg *config.Config) (*pgx.Conn, error) {
+	connStr := config.GetDatabaseURL(cfg)
+
+	ctx := context.Background()
+	db, err := pgx.Connect(ctx, connStr)
+	if err != nil {
+		return nil, err
+	}
+
+    dbHealthCheck(db)
+	return db, nil
+}
+
+
+func dbHealthCheck(db *pgx.Conn) error {
+    ctx := context.Background()
+    var version string
+    err := db.QueryRow(ctx, "select version()").Scan(&version)
     if err != nil {
-        panic(err)
+        return err
     }
-	log.Printf("Connected to database: %s\n", version)
-
-    return db, nil
+    log.Printf("Database connection is healthy: %s\n", version)
+    return nil
 }

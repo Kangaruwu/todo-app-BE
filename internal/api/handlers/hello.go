@@ -4,6 +4,11 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
+// Hello handler cho health check
 func Hello(c *fiber.Ctx) error {
-	return c.SendString("Hello, World!")
+	return c.JSON(fiber.Map{
+		"message": "Hello, World!",
+		"status":  "OK",
+		"service": "Go Backend Todo API",
+	})
 }
