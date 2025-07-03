@@ -4,7 +4,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-// Hello handler cho health check
+// Hello handler for health check
 func Hello(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{
 		"message": "Hello, World!",

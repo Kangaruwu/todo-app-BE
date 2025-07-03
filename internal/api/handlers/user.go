@@ -4,49 +4,54 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-// User handlers 
+// User handlers - Legacy handlers (no dependency injection yet)
+// TODO: Refactor to use dependency injection like TodoHandler
 
-// "/api/v1/users/" - Get all users
+
+// GetUsers gets all users
 func GetUsers(c *fiber.Ctx) error {
-	// TODO: Implement logic lấy users từ database
+	// TODO: Implement logic to get users from database
+
+	
+
 	return c.JSON(fiber.Map{
 		"message": "Get users",
 		"data":    []interface{}{},
 	})
 }
 
-// "/api/v1/users/create" - Create a new user
+// CreateUser creates a new user
 func CreateUser(c *fiber.Ctx) error {
-	// TODO: Implement logic tạo user
+	// TODO: Implement logic to create user
 	return c.JSON(fiber.Map{
 		"message": "Create user",
 	})
 }
 
-// GetUser lấy user theo ID
+// GetUser gets user by ID
 func GetUser(c *fiber.Ctx) error {
 	id := c.Params("id")
-	// TODO: Implement logic lấy user theo ID
+
 	return c.JSON(fiber.Map{
 		"message": "Get user",
 		"id":      id,
 	})
 }
 
-// UpdateUser cập nhật user
+// UpdateUser updates user
 func UpdateUser(c *fiber.Ctx) error {
 	id := c.Params("id")
-	// TODO: Implement logic cập nhật user
+	// TODO: Implement logic to update user
 	return c.JSON(fiber.Map{
 		"message": "Update user",
 		"id":      id,
 	})
 }
 
-// DeleteUser xóa user
+// DeleteUser deletes user
 func DeleteUser(c *fiber.Ctx) error {
 	id := c.Params("id")
-	// TODO: Implement logic xóa user
+	// TODO: Implement logic to delete user
 	return c.JSON(fiber.Map{
 		"message": "Delete user",
 		"id":      id,
