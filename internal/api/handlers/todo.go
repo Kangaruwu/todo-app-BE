@@ -10,12 +10,12 @@ import (
 	"github.com/google/uuid"
 )
 
-// TodoHandler struct chứa các dependencies
+// TodoHandler struct contain dependencies
 type TodoHandler struct {
 	todoService service.TodoService
 }
 
-// NewTodoHandler tạo một instance mới của todo handler
+// NewTodoHandler create a new instance of todo handler
 func NewTodoHandler(todoService service.TodoService) *TodoHandler {
 	return &TodoHandler{
 		todoService: todoService,

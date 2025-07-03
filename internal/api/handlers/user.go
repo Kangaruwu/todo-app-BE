@@ -2,16 +2,25 @@ package handlers
 
 import (
 	"github.com/gofiber/fiber/v2"
+	"go-backend-todo/internal/service"
 )
 
-// User handlers - Legacy handlers (no dependency injection yet)
-// TODO: Refactor to use dependency injection like TodoHandler
 
+type UserHandler struct{
+	userService service.UserService
+}
+
+func NewUserHandler(userService service.UserService) *UserHandler {
+	return &UserHandler{
+		userService: userService,
+	}
+}
 
 // GetUsers gets all users
-func GetUsers(c *fiber.Ctx) error {
+func (h *UserHandler) GetUsers(c *fiber.Ctx) error {
 	// TODO: Implement logic to get users from database
 
+	
 	
 
 	return c.JSON(fiber.Map{
@@ -21,7 +30,7 @@ func GetUsers(c *fiber.Ctx) error {
 }
 
 // CreateUser creates a new user
-func CreateUser(c *fiber.Ctx) error {
+func (h *UserHandler) CreateUser(c *fiber.Ctx) error {
 	// TODO: Implement logic to create user
 	return c.JSON(fiber.Map{
 		"message": "Create user",
@@ -29,7 +38,7 @@ func CreateUser(c *fiber.Ctx) error {
 }
 
 // GetUser gets user by ID
-func GetUser(c *fiber.Ctx) error {
+func (h *UserHandler) GetUser(c *fiber.Ctx) error {
 	id := c.Params("id")
 
 	return c.JSON(fiber.Map{
@@ -39,7 +48,7 @@ func GetUser(c *fiber.Ctx) error {
 }
 
 // UpdateUser updates user
-func UpdateUser(c *fiber.Ctx) error {
+func (h *UserHandler) UpdateUser(c *fiber.Ctx) error {
 	id := c.Params("id")
 	// TODO: Implement logic to update user
 	return c.JSON(fiber.Map{
@@ -49,7 +58,7 @@ func UpdateUser(c *fiber.Ctx) error {
 }
 
 // DeleteUser deletes user
-func DeleteUser(c *fiber.Ctx) error {
+func (h *UserHandler) DeleteUser(c *fiber.Ctx) error {
 	id := c.Params("id")
 	// TODO: Implement logic to delete user
 	return c.JSON(fiber.Map{

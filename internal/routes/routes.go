@@ -23,38 +23,39 @@ func SetupRoutes(app *fiber.App, cfg *config.Config, pool *pgxpool.Pool) {
 
 	// Initialize repositories
 	todoRepo := repository.NewTodoRepository(pool)
-	// userRepo := repository.NewUserRepository(pool) // TODO: implement
+	userRepo := repository.NewUserRepository(pool) 
 
 	// Initialize services
 	todoService := service.NewTodoService(todoRepo)
-	// userService := service.NewUserService(userRepo) // TODO: implement
+	userService := service.NewUserService(userRepo) 
 
 	// Initialize handlers
 	todoHandler := handlers.NewTodoHandler(todoService)
-	// userHandler := handlers.NewUserHandler(userService) // TODO: implement
+	userHandler := handlers.NewUserHandler(userService) 
 
 	// API routes
-	setupAPIRoutes(app, todoHandler)
+	setupAPIRoutes(app, todoHandler, userHandler)
 
 	// 404 handler
 	app.Use(middlewares.NotFound)
 }
 
 // setupAPIRoutes sets up API routes with handlers
-func setupAPIRoutes(app *fiber.App, todoHandler *handlers.TodoHandler) {
+func setupAPIRoutes(
+	app *fiber.App, 
+	todoHandler *handlers.TodoHandler,
+	userHandler *handlers.UserHandler) {
 	// API group v1
 	api := app.Group("/api/v1")
 
 	// Health check
 	api.Get("/health", handlers.Hello)
 
-	// Setup todo routes with dependency injection
+	// Setup routes with dependency injection
 	setupTodoRoutes(api, todoHandler)
+	setupUserRoutes(api, userHandler)
 
-	// Setup user routes (legacy, no DI)
-	setupUserRoutes(api)
-
-	// setupAuthRoutes(api) // TODO: Uncomment when finish auth handlers
+	// setupAuthRoutes(api) // TODO: 
 }
 
 // setupTodoRoutes sets up todo-related routes with dependency injection
@@ -68,13 +69,13 @@ func setupTodoRoutes(api fiber.Router, todoHandler *handlers.TodoHandler) {
 }
 
 // setupUserRoutes sets up user-related routes (legacy implementation)
-func setupUserRoutes(api fiber.Router) {
+func setupUserRoutes(api fiber.Router, userHandler *handlers.UserHandler) {
 	users := api.Group("/users")
-	users.Get("/", handlers.GetUsers)
-	users.Post("/", handlers.CreateUser)
-	users.Get("/:id", handlers.GetUser)
-	users.Put("/:id", handlers.UpdateUser)
-	users.Delete("/:id", handlers.DeleteUser)
+	users.Get("/", userHandler.GetUsers)
+	users.Post("/", userHandler.CreateUser)
+	users.Get("/:id", userHandler.GetUser)
+	users.Put("/:id", userHandler.UpdateUser)
+	users.Delete("/:id", userHandler.DeleteUser)
 }
 
 
