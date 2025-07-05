@@ -108,7 +108,7 @@ func poolHealthCheck(pool *pgxpool.Pool) {
 	DbPool = pool
 }
 
-// For single connection 
+// For single connection
 func connectHealthCheck(db *pgx.Conn) {
 	ctx := context.Background()
 	if err := db.Ping(ctx); err != nil {
@@ -118,4 +118,3 @@ func connectHealthCheck(db *pgx.Conn) {
 
 	DbInstance = db
 }
-

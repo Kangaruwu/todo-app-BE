@@ -26,7 +26,7 @@ func NewTodoHandler(todoService service.TodoService) *TodoHandler {
 func (h *TodoHandler) GetTodos(c *fiber.Ctx) error {
 	// TODO: Lấy userID từ JWT token hoặc session
 	// Tạm thời hardcode để test
-	temp := "eef14407-d602-40ad-9c79-2241c3d06deb"
+	temp := "e146769c-4ad3-4839-b2ee-174d96c59bca"
 	userID := uuid.Must(uuid.Parse(temp)) 
 	//userID := uuid.New() // Thay bằng userID thực từ auth
 

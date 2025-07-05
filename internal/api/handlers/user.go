@@ -5,8 +5,7 @@ import (
 	"go-backend-todo/internal/service"
 )
 
-
-type UserHandler struct{
+type UserHandler struct {
 	userService service.UserService
 }
 
@@ -20,12 +19,17 @@ func NewUserHandler(userService service.UserService) *UserHandler {
 func (h *UserHandler) GetUsers(c *fiber.Ctx) error {
 	// TODO: Implement logic to get users from database
 
-	
-	
+	user, err := h.userService.GetUserByID(c)
+	if err != nil {
+		return c.JSON(fiber.Map{
+			"message": "Get users",
+			"data":    "Ko co j dau loi roi",
+		})
+	}
 
 	return c.JSON(fiber.Map{
 		"message": "Get users",
-		"data":    []interface{}{},
+		"data":    user,
 	})
 }
 

@@ -27,14 +27,14 @@ func GetCORSConfig(cfg *Config) cors.Config {
 // GetDatabaseURL returns formatted database connection string
 func GetDatabaseURL(cfg *Config) string {
 	return fmt.Sprintf(
-		"host=%s port=%d user=%s password=%s dbname=%s sslmode=%s channel_binding=%s",
+		"host=%s port=%d user=%s password=%s dbname=%s sslmode=%s", //" channel_binding=%s"
 		cfg.Database.Host,
 		cfg.Database.Port,
 		cfg.Database.User,
 		cfg.Database.Password,
 		cfg.Database.DBName,
 		cfg.Database.SSLMode,
-		cfg.Database.ChannelBinding,
+		//cfg.Database.ChannelBinding,
 	)
 }
 

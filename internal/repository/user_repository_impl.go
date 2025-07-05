@@ -52,7 +52,27 @@ func (u *userRepository) Delete(ctx context.Context, id uuid.UUID) error {
 
 // Query operations
 func (u *userRepository) GetAll(ctx context.Context, limit, offset int) ([]*models.User, error) {
-	return nil, nil
+	query := "SELECT * FROM users;"
+	pool := db.GetPool()
+	rows, err := pool.Query(ctx, query)
+	if err != nil {
+		log.Println("BRUHHHHHHHHHH:", err)
+	}
+	defer rows.Close()
+	var users []*models.User
+	for rows.Next() {
+		var user models.User
+		err := rows.Scan(
+			&user.ID, &user.Email, &user.Username, &user.Password,
+			&user.CreatedAt, &user.UpdatedAt,
+		)
+		if err != nil {
+			return nil, err
+		}
+		users = append(users, &user)
+	}
+
+	return users, nil
 }
 func (u *userRepository) Count(ctx context.Context) (int64, error) {
 	return 0, nil

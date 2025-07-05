@@ -28,3 +28,14 @@ CREATE INDEX idx_todos_completed ON todos(completed);
 CREATE INDEX idx_todos_created_at ON todos(created_at);
 CREATE INDEX idx_users_email ON users(email);
 CREATE INDEX idx_users_username ON users(username);
+
+
+-- Create sample data for users
+INSERT INTO users (email, username, password) VALUES
+('bao@123', 'bao', '123');
+
+-- Create sample data for todos
+INSERT INTO todos (title, completed, user_id) VALUES
+('Buy groceries', FALSE, (SELECT id FROM users WHERE username = 'bao')),
+('Complete project report', FALSE, (SELECT id FROM users WHERE username = 'bao')),
+('Call mom', TRUE, (SELECT id FROM users WHERE username = 'bao'));
