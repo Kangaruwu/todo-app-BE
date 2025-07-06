@@ -1,15 +1,16 @@
--- Drop indexes 
-DROP INDEX IF EXISTS idx_users_username;
-DROP INDEX IF EXISTS idx_users_email;
-DROP INDEX IF EXISTS idx_todos_created_at;
-DROP INDEX IF EXISTS idx_todos_completed;
-DROP INDEX IF EXISTS idx_todos_user_id;
+-- down.sql
+BEGIN;
 
--- Drop tables (todos first since having FK from users)
 DROP TABLE IF EXISTS todos;
-DROP TABLE IF EXISTS users;
 
--- Drop extension 
-DROP EXTENSION IF EXISTS "uuid-ossp";
+DROP TABLE IF EXISTS user_login_data_external;
 
+DROP TABLE IF EXISTS external_providers;
 
+DROP TABLE IF EXISTS user_login_data;
+
+DROP TABLE IF EXISTS user_account;
+
+DROP TYPE IF EXISTS user_role_enum;
+
+COMMIT;

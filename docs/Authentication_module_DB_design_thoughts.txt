@@ -1,0 +1,64 @@
+Quá trình thiết kế DB: Authentication + User Module
+1. Chỉ đơn giản:
+	CREATE TABLE users (
+    	id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    	email VARCHAR(255) UNIQUE NOT NULL,
+    	username VARCHAR(50) UNIQUE NOT NULL,
+    	password VARCHAR(255) NOT NULL,
+    	created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    	updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+	); 
+Các token sẽ được lưu ở Client
+
+2. Sau đó thì muốn mở rộng để đảm bảo:
+	bảo mật + 
+	OAuth2.0 cho Github, Google + 
+	lấy lại mật khẩu qua email + 
+	xác nhận tài khoản bằng email 
+và cuối cùng tham khảo https://vertabelo.com/blog/user-authentication-module/ => mở rộng ra như sau: 
+
+-- 0.1 User role type
+CREATE TYPE user_role_enum AS ENUM ('user', 'admin');
+
+-- 1. user_account
+CREATE TABLE user_account (
+    user_id               INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    user_role             user_role_enum          NOT NULL DEFAULT 'user',
+    FOREIGN KEY (role_id) REFERENCES user_roles (role_id)
+);
+
+-- 2. user_login_data (1-1 với user_account qua user_id)
+CREATE TABLE user_login_data (
+    user_id                   			INTEGER               	PRIMARY KEY,
+    user_name                 			VARCHAR(20)           	NOT NULL,
+    password_hash             			VARCHAR(250)          	NOT NULL,
+    password_salt             			VARCHAR(100)          	NOT NULL,
+    hash_algorithm            			VARCHAR(10)           	NOT NULL,
+    email_address             			VARCHAR(100)          	NOT NULL,
+
+    confirmation_token        			VARCHAR(100),
+    confirmation_token_generation_time     	TIMESTAMP,
+    email_validation_status   			VARCHAR(20)	      	NOT NULL,
+
+    password_recovery_token   			VARCHAR(100),
+    recovery_token_time       			TIMESTAMP,
+
+    FOREIGN KEY (user_id)     			REFERENCES user_account	(user_id),
+);
+
+-- 3. external_providers
+CREATE TABLE external_providers (
+    external_provider_id     INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    provider_name            VARCHAR(50)           NOT NULL,
+    ws_endpoint              VARCHAR(200)          NOT NULL
+);
+
+-- 4. user_login_data_external (liên kết 1-n giữa user_login_data và external_providers)
+CREATE TABLE user_login_data_external (
+    user_id                   INTEGER               NOT NULL,
+    external_provider_id      INTEGER               NOT NULL,
+    external_provider_token   VARCHAR(100)          NOT NULL,
+    PRIMARY KEY (user_id, external_provider_id),
+    FOREIGN KEY (user_id)               REFERENCES user_login_data   (user_id),
+    FOREIGN KEY (external_provider_id)  REFERENCES external_providers (external_provider_id)
+);
