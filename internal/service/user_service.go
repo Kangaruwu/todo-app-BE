@@ -3,7 +3,7 @@ package service
 import (
 	"github.com/gofiber/fiber/v2"
 	"go-backend-todo/internal/models"
-	"go-backend-todo/internal/repository"
+	"go-backend-todo/internal/repository/user"
 )
 
 type UserService interface {
@@ -14,10 +14,10 @@ type UserService interface {
 }
 
 type userService struct {
-	userRepo repository.UserRepository
+	userRepo user_repository.UserRepository
 }
 
-func NewUserService(userRepo repository.UserRepository) UserService {
+func NewUserService(userRepo user_repository.UserRepository) UserService {
 	return &userService{
 		userRepo: userRepo,
 	}

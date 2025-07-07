@@ -4,7 +4,8 @@ import (
 	"go-backend-todo/internal/api/handlers"
 	"go-backend-todo/internal/api/middlewares"
 	"go-backend-todo/internal/config"
-	"go-backend-todo/internal/repository"
+	"go-backend-todo/internal/repository/todo"
+	"go-backend-todo/internal/repository/user"
 	"go-backend-todo/internal/service"
 
 	"github.com/gofiber/fiber/v2"
@@ -22,8 +23,8 @@ func SetupRoutes(app *fiber.App, cfg *config.Config, pool *pgxpool.Pool) {
 	app.Use(cors.New(config.GetCORSConfig(cfg)))
 
 	// Initialize repositories
-	todoRepo := repository.NewTodoRepository(pool)
-	userRepo := repository.NewUserRepository(pool) 
+	todoRepo := todo_repository.NewTodoRepository(pool)
+	userRepo := user_repository.NewUserRepository(pool) 
 
 	// Initialize services
 	todoService := service.NewTodoService(todoRepo)

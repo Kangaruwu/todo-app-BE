@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"go-backend-todo/internal/models"
-	"go-backend-todo/internal/repository"
+	"go-backend-todo/internal/repository/todo"
 
 	"github.com/google/uuid"
 )
@@ -24,11 +24,11 @@ type TodoService interface {
 
 // todoService implementation of TodoService interface
 type todoService struct {
-	todoRepo repository.TodoRepository
+	todoRepo todo_repository.TodoRepository
 }
 
 // NewTodoService creates a new instance of todo service
-func NewTodoService(todoRepo repository.TodoRepository) TodoService {
+func NewTodoService(todoRepo todo_repository.TodoRepository) TodoService {
 	return &todoService{
 		todoRepo: todoRepo,
 	}

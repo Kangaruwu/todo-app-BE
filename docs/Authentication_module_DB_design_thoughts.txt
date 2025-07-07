@@ -62,3 +62,5 @@ CREATE TABLE user_login_data_external (
     FOREIGN KEY (user_id)               REFERENCES user_login_data   (user_id),
     FOREIGN KEY (external_provider_id)  REFERENCES external_providers (external_provider_id)
 );
+
+-- mà đm codebase cũ để uuid vậy để lại uuid đi

@@ -1,4 +1,4 @@
-package repository
+package todo_repository
 
 import (
 	"context"
