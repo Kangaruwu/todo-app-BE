@@ -19,31 +19,20 @@ func NewUserRepository(db *pgxpool.Pool) UserRepository {
 }
 
 // CRUD operations
-func (u *userRepository) Create(ctx context.Context, user *models.User) error {
-	query := "INSERT INTO users (email, username, password) VALUES ($1, $2, $3)"
-
-	pool := db.GetPool()
-	res, err := pool.Exec(ctx, query,
-		user.Email, user.Username, "lol",
-	)
-	if res.RowsAffected() == 0 {
-		log.Println("Cannot create user:", err)
-		return err
-	}
-	log.Printf("Create new user %s successfully!", user.Username)
+func (u *userRepository) Create(ctx context.Context, user *models.UserAccount) error {
 	return nil
 }
 
-func (u *userRepository) GetByID(ctx context.Context, id uuid.UUID) (*models.User, error) {
+func (u *userRepository) GetByID(ctx context.Context, id uuid.UUID) (*models.UserAccount, error) {
 	return nil, nil
 }
-func (u *userRepository) GetByEmail(ctx context.Context, email string) (*models.User, error) {
+func (u *userRepository) GetByEmail(ctx context.Context, email string) (*models.UserAccount, error) {
 	return nil, nil
 }
-func (u *userRepository) GetByUsername(ctx context.Context, username string) (*models.User, error) {
+func (u *userRepository) GetByUsername(ctx context.Context, username string) (*models.UserAccount, error) {
 	return nil, nil
 }
-func (u *userRepository) Update(ctx context.Context, user *models.User) error {
+func (u *userRepository) Update(ctx context.Context, user *models.UserAccount) error {
 	return nil
 }
 func (u *userRepository) Delete(ctx context.Context, id uuid.UUID) error {
@@ -51,21 +40,20 @@ func (u *userRepository) Delete(ctx context.Context, id uuid.UUID) error {
 }
 
 // Query operations
-func (u *userRepository) GetAll(ctx context.Context, limit, offset int) ([]*models.User, error) {
-	query := "SELECT * FROM users;"
+func (u *userRepository) GetAll(ctx context.Context, limit, offset int) ([]*models.UserAccount, error) {
+	query := "SELECT * FROM user_account;"
 	pool := db.GetPool()
 	rows, err := pool.Query(ctx, query)
 	if err != nil {
 		log.Println("BRUHHHHHHHHHH:", err)
 	}
 	defer rows.Close()
-	var users []*models.User
+	var users []*models.UserAccount
 	for rows.Next() {
-		var user models.User
+		var user models.UserAccount
 		err := rows.Scan(
-			&user.ID, &user.Email, &user.Username, &user.Password,
-			&user.CreatedAt, &user.UpdatedAt,
-		)
+			&user.UserID, &user.UserRole,
+		)	
 		if err != nil {
 			return nil, err
 		}

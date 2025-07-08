@@ -1,0 +1,19 @@
+1. Handler Layer - HTTP Transport
+    Receive HTTP request
+    Validate request format
+    Parse/bind request data
+    Call service
+    Return HTTP response
+
+2. Service Layer - Business Logic
+    Validate business rules
+    Handle business logic
+    Orchestrate multiple repositories
+    Handle transactions
+    Transform data
+
+3. Repository Layer - Data Access
+    Execute database queries
+    Handle database errors
+    Return domain models
+    No business logic

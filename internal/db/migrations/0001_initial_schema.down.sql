@@ -1,4 +1,3 @@
--- down.sql
 BEGIN;
 
 DROP TABLE IF EXISTS todos;
@@ -12,6 +11,8 @@ DROP TABLE IF EXISTS user_login_data;
 DROP TABLE IF EXISTS user_account;
 
 DROP TYPE IF EXISTS user_role_enum;
+
+DROP TYPE IF EXISTS email_validation_status_enum;
 
 DROP EXTENSION IF EXISTS "uuid-ossp";
 

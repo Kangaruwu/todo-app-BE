@@ -3,12 +3,34 @@ package main
 import (
 	"log"
 
+	_ "go-backend-todo/docs" // Import for swagger docs
 	"go-backend-todo/internal/config"
 	"go-backend-todo/internal/db"
 	"go-backend-todo/internal/routes"
 
 	"github.com/gofiber/fiber/v2"
 )
+
+// @title Go Backend Todo API
+// @version 1.0
+// @description This is a sample Todo API server built with Go Fiber
+// @termsOfService http://swagger.io/terms/
+
+// @contact.name API Support
+// @contact.url https://www.youtube.com/watch?v=KsB99Sf_fX0
+// @contact.email https://www.youtube.com/watch?v=KsB99Sf_fX0
+
+// @license.name MIT
+// @license.url https://opensource.org/licenses/MIT
+
+// @host localhost:8080
+// @BasePath /api/v1
+// @schemes http https
+
+// @securityDefinitions.apikey Bearer
+// @in header
+// @name Authorization
+// @description Type "Bearer" followed by a space and JWT token.
 
 func main() {
 	// Load configuration
