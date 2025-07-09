@@ -1,11 +1,13 @@
 package handlers
 
 import (
+	"go-backend-todo/internal/models"
 	"go-backend-todo/internal/service"
-	_ "go-backend-todo/internal/models"
+
+	"encoding/json"
+
 	"github.com/gofiber/fiber/v2"
 )
-
 
 // AuthHandler handles authentication HTTP requests
 type AuthHandler struct {
@@ -48,8 +50,33 @@ func (h *AuthHandler) Login(c *fiber.Ctx) error {
 // @Failure 409 {object} models.ErrorResponse
 // @Router /auth/register [post]
 func (h *AuthHandler) Register(c *fiber.Ctx) error {
+	body := c.Body()
+	
+	if len(body) == 0 {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"status": 	fiber.StatusBadRequest,
+			"message":  "Request body cannot be empty",
+		})
+	}
+
+	var req models.RegisterRequest
+	if err := json.Unmarshal(body, &req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"status": 	fiber.StatusBadRequest,
+			"message":  "Invalid request body",
+		})
+	}
+	
+	if err := h.authService.Register(c.Context(), &req); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"status": 	fiber.StatusInternalServerError,
+			"message":  "Failed to register user",
+		})
+	}
+
 	return c.JSON(fiber.Map{
-		"message": "Register endpoint not implemented",
+		"status": 	fiber.StatusCreated,
+		"message": "User registered successfully",
 	})
 }
 

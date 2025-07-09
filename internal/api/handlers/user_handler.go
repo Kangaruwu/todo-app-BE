@@ -15,32 +15,6 @@ func NewUserHandler(userService service.UserService) *UserHandler {
 	}
 }
 
-// GetUsers gets all users
-func (h *UserHandler) GetUsers(c *fiber.Ctx) error {
-	// TODO: Implement logic to get users from database
-
-	user, err := h.userService.GetUserByID(c)
-	if err != nil {
-		return c.JSON(fiber.Map{
-			"message": "Get users",
-			"data":    "Ko co j dau loi roi",
-		})
-	}
-
-	return c.JSON(fiber.Map{
-		"message": "Get users",
-		"data":    user,
-	})
-}
-
-// CreateUser creates a new user
-func (h *UserHandler) CreateUser(c *fiber.Ctx) error {
-	// TODO: Implement logic to create user
-	return c.JSON(fiber.Map{
-		"message": "Create user",
-	})
-}
-
 // GetUser gets user by ID
 func (h *UserHandler) GetUser(c *fiber.Ctx) error {
 	id := c.Params("id")

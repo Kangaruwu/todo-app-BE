@@ -20,7 +20,7 @@ CREATE TABLE
         user_id UUID PRIMARY KEY,
         user_name VARCHAR(20) NOT NULL UNIQUE,
         password_hash VARCHAR(250) NOT NULL,
-        password_salt VARCHAR(100) NOT NULL,
+        password_salt SMALLINT NOT NULL,
         hash_algorithm VARCHAR(10) NOT NULL,
         email_address VARCHAR(100) NOT NULL,
         confirmation_token VARCHAR(100),
@@ -115,7 +115,7 @@ VALUES
         ),
         'admin',
         'hashed_password',
-        'salt_value',
+        10,
         'bcrypt',
         'admin@example.com',
         'confirmed'

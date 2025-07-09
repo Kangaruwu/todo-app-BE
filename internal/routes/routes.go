@@ -54,12 +54,10 @@ func setupAPIRoutes(
 	app *fiber.App,
 	todoHandler *handlers.TodoHandler,
 	userHandler *handlers.UserHandler,
-	authHandler *handlers.AuthHandler) {
+	authHandler *handlers.AuthHandler,
+) {
 	// API group v1
 	api := app.Group("/api/v1")
-
-	// Health check
-	api.Get("/health", handlers.Hello)
 
 	// Setup routes with dependency injection
 	setupTodoRoutes(api, todoHandler)
@@ -80,11 +78,9 @@ func setupTodoRoutes(api fiber.Router, todoHandler *handlers.TodoHandler) {
 // setupUserRoutes sets up user-related routes with dependency injection
 func setupUserRoutes(api fiber.Router, userHandler *handlers.UserHandler) {
 	users := api.Group("/users")
-	users.Get("/", userHandler.GetUsers)
-	users.Post("/", userHandler.CreateUser)
-	users.Get("/:id", userHandler.GetUser)
-	users.Put("/:id", userHandler.UpdateUser)
-	users.Delete("/:id", userHandler.DeleteUser)
+	users.Get("/profile", userHandler.GetUser)
+	users.Put("/profile", userHandler.UpdateUser)
+	users.Delete("/profile", userHandler.DeleteUser)
 }
 
 // setupAuthRoutes sets up authentication-related routes with dependency injection

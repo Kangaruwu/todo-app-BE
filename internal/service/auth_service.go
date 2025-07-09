@@ -11,7 +11,7 @@ import (
 
 type AuthService interface {
 	Login(ctx context.Context, email, password string) (*models.UserAccount, error)
-	Register(ctx context.Context, user *models.UserAccount) (*models.UserAccount, error)
+	Register(ctx context.Context, user *models.RegisterRequest) error
 	ValidateEmail(ctx context.Context, email string) (bool, error)
 	GenerateEmailValidationToken(ctx context.Context, email string) (string, error)
 	ValidateEmailToken(ctx context.Context, token string) (bool, error)
@@ -32,9 +32,13 @@ func (s *authService) Login(ctx context.Context, email, password string) (*model
 	return s.authRepo.ValidateCredentials(ctx, email, password)
 }
 
-func (s *authService) Register(ctx context.Context, user *models.UserAccount) (*models.UserAccount, error) {
-	// return s.authRepo.CreateUser(ctx, user)
-	return nil, utils.ErrNotImplemented("Register method not implemented")
+func (s *authService) Register(ctx context.Context, user *models.RegisterRequest) error {
+	err := s.userRepo.Create(ctx, user)
+	if err != nil {
+		log.Println("Error registering user:", err)
+		return err
+	}
+	return nil
 }
 
 func (s *authService) ValidateEmail(ctx context.Context, email string) (bool, error) {

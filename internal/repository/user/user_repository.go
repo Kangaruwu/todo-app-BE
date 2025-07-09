@@ -11,7 +11,7 @@ import (
 // UserRepository interface defines methods for interacting with user data
 type UserRepository interface {
 	// CRUD operations
-	Create(ctx context.Context, user *models.UserAccount) error
+	Create(ctx context.Context, req *models.RegisterRequest) error
 	GetByID(ctx context.Context, id uuid.UUID) (*models.UserAccount, error)
 	GetByEmail(ctx context.Context, email string) (*models.UserAccount, error)
 	GetByUsername(ctx context.Context, username string) (*models.UserAccount, error)

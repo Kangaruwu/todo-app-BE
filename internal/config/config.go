@@ -43,28 +43,28 @@ func Load() *Config {
 
 	return &Config{
 		App: AppConfig{
-			Name:        getEnv("APP_NAME", "Go Backend Todo API"),
-			Environment: getEnv("APP_ENV", "development"),
+			Name:        GetEnv("APP_NAME", "Go Backend Todo API"),
+			Environment: GetEnv("APP_ENV", "development"),
 			Debug:       getEnvAsBool("APP_DEBUG", true),
 		},
 		Database: DatabaseConfig{
-			Host:     		getEnv("DB_HOST", "localhost"),
+			Host:     		GetEnv("DB_HOST", "localhost"),
 			Port:     		getEnvAsInt("DB_PORT", 5432),
-			User:     		getEnv("DB_USER", "postgres"),
-			Password: 		getEnv("DB_PASSWORD", "password"),
-			DBName:  		getEnv("DB_NAME", "todo_db"),
-			SSLMode:  		getEnv("DB_SSLMODE", "disable"),
-			ChannelBinding: getEnv("DB_CHANNEL_BINDING", "prefer"),
+			User:     		GetEnv("DB_USER", "postgres"),
+			Password: 		GetEnv("DB_PASSWORD", "password"),
+			DBName:  		GetEnv("DB_NAME", "todo_db"),
+			SSLMode:  		GetEnv("DB_SSLMODE", "disable"),
+			ChannelBinding: GetEnv("DB_CHANNEL_BINDING", "prefer"),
 		},
 		Server: ServerConfig{
-			Host: getEnv("SERVER_HOST", "localhost"),
-			Port: getEnv("SERVER_PORT", "8080"),
+			Host: GetEnv("SERVER_HOST", "localhost"),
+			Port: GetEnv("SERVER_PORT", "8080"),
 		},
 	}
 }
 
 // Helper functions
-func getEnv(key, defaultValue string) string {
+func GetEnv(key, defaultValue string) string {
 	if value := os.Getenv(key); value != "" {
 		return value
 	}
