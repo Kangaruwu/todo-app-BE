@@ -2,6 +2,7 @@ package models
 
 import (
 	"github.com/google/uuid"
+	"github.com/golang-jwt/jwt"
 )	
 
 // RegisterRequest represents user registration request
@@ -28,8 +29,6 @@ type LoginRequest struct {
 type LoginResponse struct {
 	AccessToken  string    `json:"access_token" example:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."`
 	RefreshToken string    `json:"refresh_token" example:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."`
-	ExpiresIn    int       `json:"expires_in" example:"3600"`
-	UserID       uuid.UUID `json:"user_id" example:"550e8400-e29b-41d4-a716-446655440000"`
 }
 
 // RecoverPasswordRequest represents password recovery request
@@ -55,14 +54,10 @@ type ResetPasswordResponse struct {
 	Success bool   `json:"success" example:"true"`
 }
 
-// ErrorResponse represents error response
-type ErrorResponse struct {
-	Error   string `json:"error" example:"Invalid request"`
-	Success bool   `json:"success" example:"false"`
-}
-
-// SuccessResponse represents success response
-type SuccessResponse struct {
-	Message string `json:"message" example:"Operation successful"`
-	Success bool   `json:"success" example:"true"`
+type JWTClaims struct {
+	UserID   string `json:"user_id"`
+	Username string `json:"username"`
+	Email    string `json:"email"`
+	Role     string `json:"role"`
+	jwt.StandardClaims
 }

@@ -11,16 +11,9 @@ CREATE TYPE email_validation_status_enum AS ENUM ('unconfirmed', 'confirmed', 'p
 CREATE TABLE
     user_account (
         user_id UUID PRIMARY KEY DEFAULT uuid_generate_v4 (),
-        user_role user_role_enum NOT NULL DEFAULT 'user'
-    );
-
--- 2. user_login_data (1-1 với user_account qua user_id)
-CREATE TABLE
-    user_login_data (
-        user_id UUID PRIMARY KEY,
         user_name VARCHAR(20) NOT NULL UNIQUE,
-        password_hash VARCHAR(250) NOT NULL,
-        password_salt SMALLINT NOT NULL,
+        user_role user_role_enum NOT NULL DEFAULT 'user',
+        password_hash VaARCHAR(250) NOT NULL,
         hash_algorithm VARCHAR(10) NOT NULL,
         email_address VARCHAR(100) NOT NULL,
         confirmation_token VARCHAR(100),
@@ -31,13 +24,12 @@ CREATE TABLE
         created_at TIMESTAMP
         WITH
             TIME ZONE DEFAULT NOW (),
-            updated_at TIMESTAMP
+        updated_at TIMESTAMP
         WITH
-            TIME ZONE DEFAULT NOW (),
-            FOREIGN KEY (user_id) REFERENCES user_account (user_id)
+            TIME ZONE DEFAULT NOW ()
     );
 
--- 3. external_providers
+-- 2. external_providers
 CREATE TABLE
     external_providers (
         external_provider_id UUID PRIMARY KEY DEFAULT uuid_generate_v4 (),
@@ -45,18 +37,18 @@ CREATE TABLE
         ws_endpoint VARCHAR(200) NOT NULL
     );
 
--- 4. user_login_data_external (liên kết 1-n giữa user_login_data và external_providers)
+-- 3. user_account_external (liên kết 1-n giữa user_account và external_providers)
 CREATE TABLE
-    user_login_data_external (
+    user_account_external (
         user_id UUID NOT NULL,
         external_provider_id UUID NOT NULL,
         external_provider_token VARCHAR(100) NOT NULL,
         PRIMARY KEY (user_id, external_provider_id),
-        FOREIGN KEY (user_id) REFERENCES user_login_data (user_id),
+        FOREIGN KEY (user_id) REFERENCES user_account (user_id),
         FOREIGN KEY (external_provider_id) REFERENCES external_providers (external_provider_id)
     );
 
--- 5. Create todos table
+-- 4. Create todos table
 CREATE TABLE
     todos (
         id UUID PRIMARY KEY DEFAULT uuid_generate_v4 (),
@@ -81,41 +73,27 @@ CREATE INDEX idx_todos_completed ON todos (completed);
 
 CREATE INDEX idx_todos_created_at ON todos (created_at);
 
-CREATE INDEX idx_users_email ON user_login_data (email_address);
+CREATE INDEX idx_users_email ON user_account (email_address);
 
-CREATE INDEX idx_users_username ON user_login_data (user_name);
+CREATE INDEX idx_users_username ON user_account (user_name);
 
-CREATE INDEX idx_users_id ON user_login_data (user_id);
+CREATE INDEX idx_users_id ON user_account (user_id);
 
 -- Create sample data for users
 INSERT INTO
-    user_account (user_role)
-VALUES
-    ('admin');
-
-INSERT INTO
-    user_login_data (
-        user_id,
+    user_account (
         user_name,
+        user_role,
         password_hash,
-        password_salt,
         hash_algorithm,
         email_address,
         email_validation_status
     )
 VALUES
     (
-        (
-            SELECT
-                user_id
-            FROM
-                user_account
-            WHERE
-                user_role = 'admin'
-        ),
+        'BaoNguyxn',
         'admin',
         'hashed_password',
-        10,
         'bcrypt',
         'admin@example.com',
         'confirmed'
@@ -134,9 +112,9 @@ VALUES
         'https://github.com/login/oauth/authorize'
     );
 
--- Create sample data for user_login_data_external
+-- Create sample data for user_account_external
 INSERT INTO
-    user_login_data_external (
+    user_account_external (
         user_id,
         external_provider_id,
         external_provider_token

@@ -33,7 +33,6 @@ type UserLoginData struct {
 	Username string    `json:"user_name" db:"user_name"`
 
 	PasswordHash  string `json:"-" db:"password_hash"`  // not returned in JSON
-	PasswordSalt  string `json:"-" db:"password_salt"`  // not returned in JSON
 	HashAlgorithm string `json:"-" db:"hash_algorithm"` // not returned in JSON
 
 	EmailAddress string `json:"email_address" db:"email_address"`

@@ -10,7 +10,7 @@ import (
 )
 
 type AuthService interface {
-	Login(ctx context.Context, email, password string) (*models.UserAccount, error)
+	Login(ctx context.Context, req *models.LoginRequest) (*models.LoginResponse, error)
 	Register(ctx context.Context, user *models.RegisterRequest) error
 	ValidateEmail(ctx context.Context, email string) (bool, error)
 	GenerateEmailValidationToken(ctx context.Context, email string) (string, error)
@@ -28,8 +28,16 @@ func NewAuthService(userRepo user_repository.UserRepository, authRepo auth_repos
 	}
 }
 
-func (s *authService) Login(ctx context.Context, email, password string) (*models.UserAccount, error) {
-	return s.authRepo.ValidateCredentials(ctx, email, password)
+func (s *authService) Login(ctx context.Context, req *models.LoginRequest) (*models.LoginResponse, error) {
+	loginResponse, err := s.authRepo.Login(ctx, req)
+	if err != nil {
+		log.Println("Error during login:", err)
+		if err.Error() == "invalid credentials" {
+			return nil, utils.ErrInvalidCredentials("Invalid email or password")
+		}
+		return nil, err
+	}
+	return loginResponse, nil
 }
 
 func (s *authService) Register(ctx context.Context, user *models.RegisterRequest) error {

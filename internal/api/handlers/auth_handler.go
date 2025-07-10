@@ -33,8 +33,45 @@ func NewAuthHandler(authService service.AuthService) *AuthHandler {
 // @Failure 401 {object} models.ErrorResponse
 // @Router /auth/login [post]
 func (h *AuthHandler) Login(c *fiber.Ctx) error {
+	body := c.Body()
+
+	if len(body) == 0 {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"status":  fiber.StatusBadRequest,
+			"message": "Request body cannot be empty",
+			"data":    nil,
+		})
+	}
+
+	var req models.LoginRequest
+	if err := json.Unmarshal(body, &req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"status":  fiber.StatusBadRequest,
+			"message": "Invalid request body",
+			"data":    nil,
+		})
+	}
+
+	loginResponse, err := h.authService.Login(c.Context(), &req)
+	if err != nil {
+		if err.Error() == "invalid credentials" {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"status":  fiber.StatusBadRequest,
+				"message": "Invalid email or password",
+				"data":    nil,
+			})
+		}
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"status":  fiber.StatusUnauthorized,
+			"message":  "Failed to login user",
+			"data":    nil,
+		})
+	}
+
 	return c.JSON(fiber.Map{
-		"message": "Login endpoint not implemented",
+		"status":  fiber.StatusOK,
+		"message": "Login successful",
+		"data":    loginResponse,
 	})
 }
 
@@ -51,32 +88,36 @@ func (h *AuthHandler) Login(c *fiber.Ctx) error {
 // @Router /auth/register [post]
 func (h *AuthHandler) Register(c *fiber.Ctx) error {
 	body := c.Body()
-	
+
 	if len(body) == 0 {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"status": 	fiber.StatusBadRequest,
-			"message":  "Request body cannot be empty",
+			"status":  fiber.StatusBadRequest,
+			"message": "Request body cannot be empty",
+			"data":    nil,
 		})
 	}
 
 	var req models.RegisterRequest
 	if err := json.Unmarshal(body, &req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"status": 	fiber.StatusBadRequest,
-			"message":  "Invalid request body",
+			"status":  fiber.StatusBadRequest,
+			"message": "Invalid request body",
+			"data":    nil,
 		})
 	}
-	
+
 	if err := h.authService.Register(c.Context(), &req); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"status": 	fiber.StatusInternalServerError,
-			"message":  "Failed to register user",
+			"status":  fiber.StatusInternalServerError,
+			"message": "Failed to register user",
+			"data":    nil,
 		})
 	}
 
 	return c.JSON(fiber.Map{
-		"status": 	fiber.StatusCreated,
+		"status":  fiber.StatusCreated,
 		"message": "User registered successfully",
+		"data":    nil,
 	})
 }
 

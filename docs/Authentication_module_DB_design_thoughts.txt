@@ -64,3 +64,5 @@ CREATE TABLE user_login_data_external (
 );
 
 -- mà đm codebase cũ để uuid vậy để lại uuid đi
+-- trong token hash ra để muối trong đó luôn nên bỏ muối đi
+-- 

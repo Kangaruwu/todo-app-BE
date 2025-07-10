@@ -13,4 +13,5 @@ type AuthRepository interface {
 	ConfirmEmail(ctx context.Context, token string) (*models.UserAccount, error)
 	RecoverPassword(ctx context.Context, email string) (*models.UserAccount, error)
 	ResetPassword(ctx context.Context, token, newPassword string) (*models.UserAccount, error)
+	Login(ctx context.Context, req *models.LoginRequest) (*models.LoginResponse, error)
 }

@@ -6,6 +6,9 @@ import (
 	"log"
 
 	"github.com/jackc/pgx/v5/pgxpool"
+	"golang.org/x/crypto/bcrypt"
+	"go-backend-todo/internal/utils"
+	"github.com/google/uuid"
 )
 
 type authRepository struct {
@@ -19,7 +22,7 @@ func NewAuthRepository(db *pgxpool.Pool) AuthRepository {
 }
 
 func (a *authRepository) EmailExists(ctx context.Context, email string) (bool, error) {
-	query := "SELECT EXISTS(SELECT 1 FROM user_login_data WHERE email_address = $1);"
+	query := "SELECT EXISTS(SELECT 1 FROM user_account WHERE email_address = $1);"
 	var exists bool
 	err := a.db.QueryRow(ctx, query, email).Scan(&exists)
 	if err != nil {
@@ -30,7 +33,7 @@ func (a *authRepository) EmailExists(ctx context.Context, email string) (bool, e
 }
 
 func (a *authRepository) UsernameExists(ctx context.Context, username string) (bool, error) {
-	query := "SELECT EXISTS(SELECT 1 FROM user_login_data WHERE user_name = $1);"
+	query := "SELECT EXISTS(SELECT 1 FROM user_account WHERE user_name = $1);"
 	var exists bool
 	err := a.db.QueryRow(ctx, query, username).Scan(&exists)
 	if err != nil {
@@ -60,3 +63,39 @@ func (a *authRepository) ResetPassword(ctx context.Context, token, newPassword s
 	return nil, nil
 }
 
+func (a *authRepository) Login(ctx context.Context, req *models.LoginRequest) (*models.LoginResponse, error) {
+	query := "SELECT user_id, user_name, user_role, password_hash FROM user_account WHERE email_address = $1;"
+
+	var passwordHash string
+	var userID uuid.UUID
+	var userName string
+	var userRole string
+	err := a.db.QueryRow(ctx, query, req.Email).Scan(&userID, &userName, &userRole, &passwordHash)
+	if err != nil {
+		log.Println("Error during login:", err)
+		return nil, err
+	}
+
+	err = bcrypt.CompareHashAndPassword([]byte(passwordHash), []byte(req.Password))
+	if err != nil {
+		log.Println("Invalid credentials:", err)
+		return nil, utils.ErrInvalidCredentials("Invalid email or password")
+	}
+
+	accessToken , err := GenerateAccessToken(userID, userName, req.Email, userRole)
+	if err != nil {
+		log.Println("Error generating access token:", err)
+		return nil, utils.ErrInternalServerError("Failed to generate access token")
+	}
+
+	refreshToken, err := GenerateRefreshToken(userID, userName, req.Email, userRole)
+	if err != nil {
+		log.Println("Error generating refresh token:", err)
+		return nil, utils.ErrInternalServerError("Failed to generate refresh token")
+	}
+
+	return &models.LoginResponse{
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken,
+	}, nil
+}

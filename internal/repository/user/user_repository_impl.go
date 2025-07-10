@@ -30,17 +30,7 @@ func (u *userRepository) Create(ctx context.Context, req *models.RegisterRequest
 		log.Println(err)
 	}
 
-	query := `
-		INSERT INTO user_account (user_id, user_role) 
-		VALUES (DEFAULT,'user') RETURNING user_id;
-	`
 	pool := db.GetPool()
-	var userID uuid.UUID
-	err = pool.QueryRow(ctx, query).Scan(&userID)
-	if err != nil {
-		log.Println(err)
-		return err
-	}
 	// Create email validation token
 	confirmationToken, err := auth_repository.GenerateEmailValidationToken()
 	if err != nil {
@@ -48,31 +38,30 @@ func (u *userRepository) Create(ctx context.Context, req *models.RegisterRequest
 		return err
 	}
 
-	query = `
-		INSERT INTO user_login_data (
-			user_id, 
+	query := `
+		INSERT INTO user_account (
 			user_name, 
+			user_role,
 			password_hash, 
-			password_salt, 
 			hash_algorithm, 
 			email_address, 
 			confirmation_token, 
 			confirmation_token_generation_time, 
 			email_validation_status)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9);
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8);
 	`
-	_, err = pool.Exec(ctx, query, userID, req.Username, pw_hash, salt, "bcrypt", req.Email, confirmationToken, time.Now(), "pending")
+	_, err = pool.Exec(ctx, query, req.Username, "user", pw_hash, "bcrypt", req.Email, confirmationToken, time.Now(), "pending")
 	if err != nil {
 		log.Println(err)
 		return err
 	}
 
 	// Send verification email
-	err = auth_repository.SendVerificationEmail(ctx, req.Username, req.Email, confirmationToken)
-	if err != nil {
-		log.Println("Error sending verification email:", err)
-		return err
-	}
+	// err = auth_repository.SendVerificationEmail(ctx, req.Username, req.Email, confirmationToken)
+	// if err != nil {
+	// 	log.Println("Error sending verification email:", err)
+	// 	return err
+	// }
 
 	return nil
 }
