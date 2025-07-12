@@ -91,11 +91,11 @@ func (h *AuthHandler) Register(c *fiber.Ctx) error {
 
 	var req models.RegisterRequest
 	if err := json.Unmarshal(body, &req); err != nil {
-		return responses.BadRequest(c, "Invalid request body")
+		return responses.BadRequest(c, "Invalid request body: " + err.Error())
 	}
 
 	if err := h.authService.Register(c.Context(), &req); err != nil {
-		return responses.InternalServerError(c, "Failed to register user")
+		return responses.InternalServerError(c, "Failed to register user: " + err.Error())
 	}
 
 	return responses.Created(c, "User registered successfully", nil)

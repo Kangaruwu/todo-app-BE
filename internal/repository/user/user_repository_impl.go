@@ -4,14 +4,14 @@ import (
 	"context"
 	"go-backend-todo/internal/db"
 	"go-backend-todo/internal/models"
-	"go-backend-todo/internal/utils"
 	"go-backend-todo/internal/repository/auth"
+	"go-backend-todo/internal/utils"
 	"time"
 
-	"log"
-    "golang.org/x/crypto/bcrypt"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"golang.org/x/crypto/bcrypt"
+	"log"
 )
 
 type userRepository struct {
@@ -24,6 +24,22 @@ func NewUserRepository(db *pgxpool.Pool) UserRepository {
 
 // CRUD operations
 func (u *userRepository) Create(ctx context.Context, req *models.RegisterRequest) error {
+	exists, err := u.EmailExists(ctx, req.Email)
+	if err != nil {
+		return err
+	}
+	if exists {
+		return utils.ErrEmailAlreadyExists(req.Email)
+	}
+
+	exists, err = u.UsernameExists(ctx, req.Username)
+	if err != nil {
+		return err
+	}
+	if exists {
+		return utils.ErrUsernameAlreadyExists(req.Username)
+	}
+
 	salt := utils.RandInRange(bcrypt.MinCost, bcrypt.MaxCost)
 	pw_hash, err := bcrypt.GenerateFromPassword([]byte(req.Password), salt)
 	if err != nil {
@@ -57,11 +73,11 @@ func (u *userRepository) Create(ctx context.Context, req *models.RegisterRequest
 	}
 
 	//Send verification email
-	err = auth_repository.SendVerificationEmail(ctx, req.Username, req.Email, confirmationToken)
-	if err != nil {
-		log.Println("Error sending verification email:", err)
-		return err
-	}
+	// err = auth_repository.SendVerificationEmail(ctx, req.Username, req.Email, confirmationToken)
+	// if err != nil {
+	// 	log.Println("Error sending verification email:", err)
+	// 	return err
+	// }
 
 	return nil
 }
@@ -111,8 +127,23 @@ func (u *userRepository) Count(ctx context.Context) (int64, error) {
 
 // Validation operations
 func (u *userRepository) EmailExists(ctx context.Context, email string) (bool, error) {
-	return false, nil
+	query := "SELECT EXISTS(SELECT 1 FROM user_account WHERE email_address = $1);"
+	var exists bool
+	err := u.db.QueryRow(ctx, query, email).Scan(&exists)
+	if err != nil {
+		log.Println("Error checking email existence:", err)
+		return false, err
+	}
+	return exists, nil
 }
+
 func (u *userRepository) UsernameExists(ctx context.Context, username string) (bool, error) {
-	return false, nil
+	query := "SELECT EXISTS(SELECT 1 FROM user_account WHERE user_name = $1);"
+	var exists bool
+	err := u.db.QueryRow(ctx, query, username).Scan(&exists)
+	if err != nil {
+		log.Println("Error checking username existence:", err)
+		return false, err
+	}
+	return exists, nil
 }

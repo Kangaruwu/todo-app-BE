@@ -17,6 +17,14 @@ func ErrInternalServerError(message string) error {
 	return fmt.Errorf("internal server error: %s", message)
 }
 
+func ErrEmailAlreadyExists(message string) error {
+	return fmt.Errorf("email already exists: %s", message)
+}
+
+func ErrUsernameAlreadyExists(message string) error {
+	return fmt.Errorf("username already exists: %s", message)
+}
+
 func RandInRange(min, max int) int {
 	if min > max {
 		min, max = max, min

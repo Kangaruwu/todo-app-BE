@@ -21,28 +21,6 @@ func NewAuthRepository(db *pgxpool.Pool) AuthRepository {
 	}
 }
 
-func (a *authRepository) EmailExists(ctx context.Context, email string) (bool, error) {
-	query := "SELECT EXISTS(SELECT 1 FROM user_account WHERE email_address = $1);"
-	var exists bool
-	err := a.db.QueryRow(ctx, query, email).Scan(&exists)
-	if err != nil {
-		log.Println("Error checking email existence:", err)
-		return false, err
-	}
-	return exists, nil
-}
-
-func (a *authRepository) UsernameExists(ctx context.Context, username string) (bool, error) {
-	query := "SELECT EXISTS(SELECT 1 FROM user_account WHERE user_name = $1);"
-	var exists bool
-	err := a.db.QueryRow(ctx, query, username).Scan(&exists)
-	if err != nil {
-		log.Println("Error checking username existence:", err)
-		return false, err
-	}
-	return exists, nil
-}
-
 func (a *authRepository) ValidateCredentials(ctx context.Context, email, password string) (*models.UserAccount, error) {
 	return nil, nil 
 }
@@ -87,6 +65,6 @@ func (a *authRepository) Login(ctx context.Context, req *models.LoginRequest) (*
 		Username:  userName,
 		Email: req.Email,
 		Role:  models.UserRoleEnum(userRole),
-		
+
 	}, nil
 }

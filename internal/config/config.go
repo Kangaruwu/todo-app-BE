@@ -104,10 +104,10 @@ func Load() *Config {
 			FromName:     GetEnv("FROM_NAME", "Todo App"),
 		},
 		CORS: CORSConfig{
-			AllowOrigins:     GetEnv("CORS_ALLOW_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000"),
+			AllowOrigins:     GetEnv("CORS_ALLOW_ORIGINS", "*"), // Allow all origins 
 			AllowMethods:     GetEnv("CORS_ALLOW_METHODS", "GET,POST,PUT,DELETE,OPTIONS,PATCH"),
 			AllowHeaders:     GetEnv("CORS_ALLOW_HEADERS", "Content-Type,Authorization,Accept,Origin,X-Requested-With"),
-			AllowCredentials: getEnvAsBool("CORS_ALLOW_CREDENTIALS", true),
+			AllowCredentials: getEnvAsBool("CORS_ALLOW_CREDENTIALS", false), // Must be false when AllowOrigins is "*"
 		},
 	}
 }

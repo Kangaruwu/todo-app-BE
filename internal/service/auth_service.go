@@ -46,8 +46,11 @@ func (s *authService) Login(ctx context.Context, req *models.LoginRequest) (*mod
 }
 
 func (s *authService) Register(ctx context.Context, req *models.RegisterRequest) error {
-	// TODO: Implement registration logic
-	// This should create user and return user profile
+	err := s.userRepo.Create(ctx, req)
+	if err != nil {
+		log.Println("Error registering user:", err)
+		return err
+	}
 	return nil
 }
 
