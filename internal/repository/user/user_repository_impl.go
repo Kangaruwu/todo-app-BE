@@ -56,12 +56,12 @@ func (u *userRepository) Create(ctx context.Context, req *models.RegisterRequest
 		return err
 	}
 
-	// Send verification email
-	// err = auth_repository.SendVerificationEmail(ctx, req.Username, req.Email, confirmationToken)
-	// if err != nil {
-	// 	log.Println("Error sending verification email:", err)
-	// 	return err
-	// }
+	//Send verification email
+	err = auth_repository.SendVerificationEmail(ctx, req.Username, req.Email, confirmationToken)
+	if err != nil {
+		log.Println("Error sending verification email:", err)
+		return err
+	}
 
 	return nil
 }

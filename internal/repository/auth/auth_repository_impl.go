@@ -63,7 +63,7 @@ func (a *authRepository) ResetPassword(ctx context.Context, token, newPassword s
 	return nil, nil
 }
 
-func (a *authRepository) Login(ctx context.Context, req *models.LoginRequest) (*models.LoginResponse, error) {
+func (a *authRepository) Login(ctx context.Context, req *models.LoginRequest) (*models.UserProfile, error) {
 	query := "SELECT user_id, user_name, user_role, password_hash FROM user_account WHERE email_address = $1;"
 
 	var passwordHash string
@@ -82,20 +82,11 @@ func (a *authRepository) Login(ctx context.Context, req *models.LoginRequest) (*
 		return nil, utils.ErrInvalidCredentials("Invalid email or password")
 	}
 
-	accessToken , err := GenerateAccessToken(userID, userName, req.Email, userRole)
-	if err != nil {
-		log.Println("Error generating access token:", err)
-		return nil, utils.ErrInternalServerError("Failed to generate access token")
-	}
-
-	refreshToken, err := GenerateRefreshToken(userID, userName, req.Email, userRole)
-	if err != nil {
-		log.Println("Error generating refresh token:", err)
-		return nil, utils.ErrInternalServerError("Failed to generate refresh token")
-	}
-
-	return &models.LoginResponse{
-		AccessToken:  accessToken,
-		RefreshToken: refreshToken,
+	return &models.UserProfile{
+		UserID:    userID,
+		Username:  userName,
+		Email: req.Email,
+		Role:  models.UserRoleEnum(userRole),
+		
 	}, nil
 }

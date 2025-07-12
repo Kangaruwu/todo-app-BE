@@ -2,25 +2,30 @@ package service
 
 import (
 	"context"
-	"go-backend-todo/internal/models"
-	"go-backend-todo/internal/repository/user"
-	"go-backend-todo/internal/repository/auth"	
-	"go-backend-todo/internal/utils"
 	"log"
+	"go-backend-todo/internal/utils"
+	"go-backend-todo/internal/models"
+	auth_repository "go-backend-todo/internal/repository/auth"
+	user_repository "go-backend-todo/internal/repository/user"
+
+	"github.com/google/uuid"
 )
 
 type AuthService interface {
-	Login(ctx context.Context, req *models.LoginRequest) (*models.LoginResponse, error)
-	Register(ctx context.Context, user *models.RegisterRequest) error
-	ValidateEmail(ctx context.Context, email string) (bool, error)
-	GenerateEmailValidationToken(ctx context.Context, email string) (string, error)
-	ValidateEmailToken(ctx context.Context, token string) (bool, error)
+	Login(ctx context.Context, req *models.LoginRequest) (*models.UserProfile, error)
+	Register(ctx context.Context, req *models.RegisterRequest) error
+	GetUserByID(ctx context.Context, userID uuid.UUID) (*models.UserProfile, error)
+	ConfirmEmail(ctx context.Context, token string) error
+	RecoverPassword(ctx context.Context, email string) error
+	ResetPassword(ctx context.Context, token, newPassword string) error
+	ChangePassword(ctx context.Context, userID uuid.UUID, currentPassword, newPassword string) error
 }
 
 type authService struct {
 	userRepo user_repository.UserRepository
 	authRepo auth_repository.AuthRepository
 }
+
 func NewAuthService(userRepo user_repository.UserRepository, authRepo auth_repository.AuthRepository) AuthService {
 	return &authService{
 		userRepo: userRepo,
@@ -28,8 +33,8 @@ func NewAuthService(userRepo user_repository.UserRepository, authRepo auth_repos
 	}
 }
 
-func (s *authService) Login(ctx context.Context, req *models.LoginRequest) (*models.LoginResponse, error) {
-	loginResponse, err := s.authRepo.Login(ctx, req)
+func (s *authService) Login(ctx context.Context, req *models.LoginRequest) (*models.UserProfile, error) {
+	user, err := s.authRepo.Login(ctx, req)
 	if err != nil {
 		log.Println("Error during login:", err)
 		if err.Error() == "invalid credentials" {
@@ -37,33 +42,36 @@ func (s *authService) Login(ctx context.Context, req *models.LoginRequest) (*mod
 		}
 		return nil, err
 	}
-	return loginResponse, nil
+	return user, nil
 }
 
-func (s *authService) Register(ctx context.Context, user *models.RegisterRequest) error {
-	err := s.userRepo.Create(ctx, user)
-	if err != nil {
-		log.Println("Error registering user:", err)
-		return err
-	}
+func (s *authService) Register(ctx context.Context, req *models.RegisterRequest) error {
+	// TODO: Implement registration logic
+	// This should create user and return user profile
 	return nil
 }
 
-func (s *authService) ValidateEmail(ctx context.Context, email string) (bool, error) {
-	return s.authRepo.EmailExists(ctx, email)
-}
-func (s *authService) GenerateEmailValidationToken(ctx context.Context, email string) (string, error) {
-	return "", utils.ErrNotImplemented("GenerateEmailValidationToken method not implemented")
+func (s *authService) GetUserByID(ctx context.Context, userID uuid.UUID) (*models.UserProfile, error) {
+	// TODO: Implement get user by ID
+	return nil, nil
 }
 
-func (s *authService) ValidateEmailToken(ctx context.Context, token string) (bool, error) {
-	user, err := s.authRepo.ConfirmEmail(ctx, token)
-	if err != nil {
-		log.Println("Error validating email token:", err)
-		return false, err
-	}
-	if user == nil {
-		return false, nil // Token is invalid or expired
-	}
-	return true, nil // Token is valid
+func (s *authService) ConfirmEmail(ctx context.Context, token string) error {
+	// TODO: Implement email confirmation
+	return nil
+}
+
+func (s *authService) RecoverPassword(ctx context.Context, email string) error {
+	// TODO: Implement password recovery
+	return nil
+}
+
+func (s *authService) ResetPassword(ctx context.Context, token, newPassword string) error {
+	// TODO: Implement password reset
+	return nil
+}
+
+func (s *authService) ChangePassword(ctx context.Context, userID uuid.UUID, currentPassword, newPassword string) error {
+	// TODO: Implement password change
+	return nil
 }

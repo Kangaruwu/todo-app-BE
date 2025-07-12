@@ -10,6 +10,9 @@ type Config struct {
 	App      AppConfig
 	Database DatabaseConfig
 	Server   ServerConfig
+	JWT      JWTConfig
+	Email    EmailConfig
+	CORS     CORSConfig
 }
 
 // AppConfig holds application-specific configuration
@@ -36,6 +39,32 @@ type ServerConfig struct {
 	Port string
 }
 
+// JWTConfig holds JWT configuration
+type JWTConfig struct {
+	AccessSecret     string
+	RefreshSecret    string
+	AccessExpiryHour int
+	RefreshExpiryDay int
+}
+
+// EmailConfig holds email configuration
+type EmailConfig struct {
+	SMTPHost     string
+	SMTPPort     int
+	SMTPUsername string
+	SMTPPassword string
+	FromEmail    string
+	FromName     string
+}
+
+// CORSConfig holds CORS configuration
+type CORSConfig struct {
+	AllowOrigins     string
+	AllowMethods     string
+	AllowHeaders     string
+	AllowCredentials bool
+}
+
 // Load loads configuration from environment variables
 func Load() *Config {
 	// Load environment variables from .env file
@@ -59,6 +88,26 @@ func Load() *Config {
 		Server: ServerConfig{
 			Host: GetEnv("SERVER_HOST", "localhost"),
 			Port: GetEnv("SERVER_PORT", "8080"),
+		},
+		JWT: JWTConfig{
+			AccessSecret:     GetEnv("JWT_ACCESS_SECRET", "your-super-secret-access-key"),
+			RefreshSecret:    GetEnv("JWT_REFRESH_SECRET", "your-super-secret-refresh-key"),
+			AccessExpiryHour: getEnvAsInt("JWT_ACCESS_EXPIRY_HOUR", 24),
+			RefreshExpiryDay: getEnvAsInt("JWT_REFRESH_EXPIRY_DAY", 7),
+		},
+		Email: EmailConfig{
+			SMTPHost:     GetEnv("SMTP_HOST", "smtp.gmail.com"),
+			SMTPPort:     getEnvAsInt("SMTP_PORT", 587),
+			SMTPUsername: GetEnv("SMTP_USERNAME", ""),
+			SMTPPassword: GetEnv("SMTP_PASSWORD", ""),
+			FromEmail:    GetEnv("FROM_EMAIL", "noreply@todoapp.com"),
+			FromName:     GetEnv("FROM_NAME", "Todo App"),
+		},
+		CORS: CORSConfig{
+			AllowOrigins:     GetEnv("CORS_ALLOW_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000"),
+			AllowMethods:     GetEnv("CORS_ALLOW_METHODS", "GET,POST,PUT,DELETE,OPTIONS,PATCH"),
+			AllowHeaders:     GetEnv("CORS_ALLOW_HEADERS", "Content-Type,Authorization,Accept,Origin,X-Requested-With"),
+			AllowCredentials: getEnvAsBool("CORS_ALLOW_CREDENTIALS", true),
 		},
 	}
 }

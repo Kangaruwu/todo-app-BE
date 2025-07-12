@@ -60,3 +60,38 @@ type UpdateUserRequest struct {
 	Email    *string `json:"email,omitempty" validate:"omitempty,email"`
 	Username *string `json:"username,omitempty" validate:"omitempty,min=3,max=50"`
 }
+
+// UserProfile represents user profile information
+type UserProfile struct {
+	UserID    uuid.UUID                 `json:"user_id" db:"user_id"`
+	Username  string                    `json:"username" db:"user_name"`
+	Email     string                    `json:"email" db:"email_address"`
+	Role      UserRoleEnum              `json:"role" db:"user_role"`
+	Status    emailValidationStatusEnum `json:"email_status" db:"email_validation_status"`
+	CreatedAt time.Time                 `json:"created_at" db:"created_at"`
+	UpdatedAt time.Time                 `json:"updated_at" db:"updated_at"`
+}
+
+// UpdateProfileRequest represents profile update request
+type UpdateProfileRequest struct {
+	Username string `json:"username" validate:"required,min=3,max=50" example:"john_doe_updated"`
+	Email    string `json:"email" validate:"required,email" example:"john.updated@example.com"`
+}
+
+// UserListResponse represents paginated user list response
+type UserListResponse struct {
+	Users  []UserProfile `json:"users"`
+	Total  int64         `json:"total"`
+	Page   int           `json:"page"`
+	Limit  int           `json:"limit"`
+	Offset int           `json:"offset"`
+}
+
+// UserStatsResponse represents user statistics
+type UserStatsResponse struct {
+	TotalUsers         int64 `json:"total_users"`
+	ActiveUsers        int64 `json:"active_users"`
+	PendingUsers       int64 `json:"pending_users"`
+	RegisteredToday    int64 `json:"registered_today"`
+	RegisteredThisWeek int64 `json:"registered_this_week"`
+}

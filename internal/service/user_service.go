@@ -1,16 +1,19 @@
 package service
 
 import (
-	"github.com/gofiber/fiber/v2"
+	"context"
 	"go-backend-todo/internal/models"
-	"go-backend-todo/internal/repository/user"
+	user_repository "go-backend-todo/internal/repository/user"
+
+	"github.com/google/uuid"
 )
 
 type UserService interface {
-	CreateUser()
-	UpdateUser()
-	DeleteUser()
-	GetUserByID(c *fiber.Ctx) (*models.UserAccount, error)
+	GetUserByID(ctx context.Context, userID uuid.UUID) (*models.UserProfile, error)
+	GetAllUsers(ctx context.Context, limit, offset int) ([]*models.UserProfile, int64, error)
+	UpdateUserProfile(ctx context.Context, userID uuid.UUID, req models.UpdateProfileRequest) (*models.UserProfile, error)
+	DeleteUser(ctx context.Context, userID uuid.UUID) error
+	GetUserStats(ctx context.Context) (*models.UserStatsResponse, error)
 }
 
 type userService struct {
@@ -23,16 +26,34 @@ func NewUserService(userRepo user_repository.UserRepository) UserService {
 	}
 }
 
-func (s *userService) CreateUser() {
-
+func (s *userService) GetUserByID(ctx context.Context, userID uuid.UUID) (*models.UserProfile, error) {
+	// TODO: Implement get user by ID
+	return nil, nil
 }
-func (s *userService) GetUserByID(c *fiber.Ctx) (*models.UserAccount, error) {
-	user, err := s.userRepo.GetAll(c.Context(), 10, 0)
-	return user[0], err
-}
-func (s *userService) UpdateUser() {
 
+func (s *userService) GetAllUsers(ctx context.Context, limit, offset int) ([]*models.UserProfile, int64, error) {
+	// TODO: Implement get all users with pagination
+	return nil, 0, nil
 }
-func (s *userService) DeleteUser() {
 
+func (s *userService) UpdateUserProfile(ctx context.Context, userID uuid.UUID, req models.UpdateProfileRequest) (*models.UserProfile, error) {
+	// TODO: Implement update user profile
+	return nil, nil
+}
+
+func (s *userService) DeleteUser(ctx context.Context, userID uuid.UUID) error {
+	// TODO: Implement delete user
+	return nil
+}
+
+func (s *userService) GetUserStats(ctx context.Context) (*models.UserStatsResponse, error) {
+	// TODO: Implement user statistics
+	stats := &models.UserStatsResponse{
+		TotalUsers:         0,
+		ActiveUsers:        0,
+		PendingUsers:       0,
+		RegisteredToday:    0,
+		RegisteredThisWeek: 0,
+	}
+	return stats, nil
 }

@@ -1,10 +1,11 @@
 package handlers
 
 import (
+	"encoding/json"
+	"go-backend-todo/internal/api/middlewares"
+	"go-backend-todo/internal/api/responses"
 	"go-backend-todo/internal/models"
 	"go-backend-todo/internal/service"
-
-	"encoding/json"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -12,125 +13,104 @@ import (
 // AuthHandler handles authentication HTTP requests
 type AuthHandler struct {
 	authService service.AuthService
+	jwtManager  *middlewares.JWTManager
 }
 
 // NewAuthHandler creates a new instance of auth handler
-func NewAuthHandler(authService service.AuthService) *AuthHandler {
+func NewAuthHandler(authService service.AuthService, jwtManager *middlewares.JWTManager) *AuthHandler {
 	return &AuthHandler{
 		authService: authService,
+		jwtManager:  jwtManager,
 	}
 }
 
 // Login handles user login
 // @Summary User login
 // @Description Authenticate user with email and password
-// @Tags auth
+// @Tags Authentication
 // @Accept json
 // @Produce json
-// @Param request body models.LoginRequest true "Login credentials"
-// @Success 200 {object} models.LoginResponse
-// @Failure 400 {object} models.ErrorResponse
-// @Failure 401 {object} models.ErrorResponse
+// @Param credentials body models.LoginRequest true "Login credentials"
+// @Success 200 {object} models.LoginResponse "Login successful"
+// @Failure 400 {object} map[string]interface{} "Invalid request data"
+// @Failure 401 {object} map[string]interface{} "Invalid credentials"
+// @Failure 500 {object} map[string]interface{} "Internal server error"
 // @Router /auth/login [post]
 func (h *AuthHandler) Login(c *fiber.Ctx) error {
-	body := c.Body()
-
-	if len(body) == 0 {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"status":  fiber.StatusBadRequest,
-			"message": "Request body cannot be empty",
-			"data":    nil,
-		})
-	}
-
 	var req models.LoginRequest
-	if err := json.Unmarshal(body, &req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"status":  fiber.StatusBadRequest,
-			"message": "Invalid request body",
-			"data":    nil,
-		})
+	if err := c.BodyParser(&req); err != nil {
+		return responses.BadRequest(c, "Invalid request body format")
 	}
 
-	loginResponse, err := h.authService.Login(c.Context(), &req)
+	// Validate request
+	if err := middlewares.ValidateStruct(&req); err != nil {
+		return responses.BadRequestWithError(c, "Validation failed", err)
+	}
+
+	user, err := h.authService.Login(c.Context(), &req)
 	if err != nil {
-		if err.Error() == "invalid credentials" {
-			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-				"status":  fiber.StatusBadRequest,
-				"message": "Invalid email or password",
-				"data":    nil,
-			})
-		}
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-			"status":  fiber.StatusUnauthorized,
-			"message":  "Failed to login user",
-			"data":    nil,
-		})
+		return responses.Unauthorized(c, "Invalid email or password")
 	}
 
-	return c.JSON(fiber.Map{
-		"status":  fiber.StatusOK,
-		"message": "Login successful",
-		"data":    loginResponse,
-	})
+	// Generate tokens
+	accessToken, err := h.jwtManager.GenerateAccessToken(user.UserID, user.Username, user.Email, string(user.Role))
+	if err != nil {
+		return responses.InternalServerError(c, "Failed to generate access token")
+	}
+
+	refreshToken, err := h.jwtManager.GenerateRefreshToken(user.UserID)
+	if err != nil {
+		return responses.InternalServerError(c, "Failed to generate refresh token")
+	}
+
+	response := models.LoginResponse{
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken,
+	}
+
+	return responses.OK(c, "Login successful", response)
 }
 
 // Register handles user registration
 // @Summary User registration
 // @Description Register a new user account
-// @Tags auth
+// @Tags Authentication
 // @Accept json
 // @Produce json
 // @Param request body models.RegisterRequest true "User registration data"
 // @Success 201 {object} models.RegisterResponse
-// @Failure 400 {object} models.ErrorResponse
-// @Failure 409 {object} models.ErrorResponse
+// @Failure 400 {object} responses.ErrorResponse
+// @Failure 409 {object} responses.ErrorResponse
 // @Router /auth/register [post]
 func (h *AuthHandler) Register(c *fiber.Ctx) error {
 	body := c.Body()
 
 	if len(body) == 0 {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"status":  fiber.StatusBadRequest,
-			"message": "Request body cannot be empty",
-			"data":    nil,
-		})
+		return responses.BadRequest(c, "Request body cannot be empty")
 	}
 
 	var req models.RegisterRequest
 	if err := json.Unmarshal(body, &req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"status":  fiber.StatusBadRequest,
-			"message": "Invalid request body",
-			"data":    nil,
-		})
+		return responses.BadRequest(c, "Invalid request body")
 	}
 
 	if err := h.authService.Register(c.Context(), &req); err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"status":  fiber.StatusInternalServerError,
-			"message": "Failed to register user",
-			"data":    nil,
-		})
+		return responses.InternalServerError(c, "Failed to register user")
 	}
 
-	return c.JSON(fiber.Map{
-		"status":  fiber.StatusCreated,
-		"message": "User registered successfully",
-		"data":    nil,
-	})
+	return responses.Created(c, "User registered successfully", nil)
 }
 
 // ConfirmEmail handles email confirmation
 // @Summary Confirm email address
 // @Description Confirm user email with verification token
-// @Tags auth
+// @Tags Authentication
 // @Accept json
 // @Produce json
 // @Param token path string true "Email confirmation token"
-// @Success 200 {object} models.SuccessResponse
-// @Failure 400 {object} models.ErrorResponse
-// @Failure 404 {object} models.ErrorResponse
+// @Success 200 {object} responses.SuccessResponse
+// @Failure 400 {object} responses.ErrorResponse
+// @Failure 404 {object} responses.ErrorResponse
 // @Router /auth/confirm-email/{token} [get]
 func (h *AuthHandler) ConfirmEmail(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{
@@ -141,13 +121,13 @@ func (h *AuthHandler) ConfirmEmail(c *fiber.Ctx) error {
 // RecoverPassword handles password recovery
 // @Summary Password recovery
 // @Description Send password recovery email
-// @Tags auth
+// @Tags Authentication
 // @Accept json
 // @Produce json
 // @Param request body models.RecoverPasswordRequest true "Recovery email data"
-// @Success 200 {object} models.SuccessResponse
-// @Failure 400 {object} models.ErrorResponse
-// @Failure 404 {object} models.ErrorResponse
+// @Success 200 {object} responses.SuccessResponse
+// @Failure 400 {object} responses.ErrorResponse
+// @Failure 404 {object} responses.ErrorResponse
 // @Router /auth/recover-password [post]
 func (h *AuthHandler) RecoverPassword(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{
@@ -158,13 +138,13 @@ func (h *AuthHandler) RecoverPassword(c *fiber.Ctx) error {
 // ResetPassword handles password reset
 // @Summary Reset password
 // @Description Reset user password with recovery token
-// @Tags auth
+// @Tags Authentication
 // @Accept json
 // @Produce json
 // @Param request body models.ResetPasswordRequest true "Password reset data"
-// @Success 200 {object} models.SuccessResponse
-// @Failure 400 {object} models.ErrorResponse
-// @Failure 404 {object} models.ErrorResponse
+// @Success 200 {object} responses.SuccessResponse
+// @Failure 400 {object} responses.ErrorResponse
+// @Failure 404 {object} responses.ErrorResponse
 // @Router /auth/reset-password [post]
 func (h *AuthHandler) ResetPassword(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{

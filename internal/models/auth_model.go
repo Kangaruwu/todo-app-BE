@@ -2,8 +2,7 @@ package models
 
 import (
 	"github.com/google/uuid"
-	"github.com/golang-jwt/jwt"
-)	
+)
 
 // RegisterRequest represents user registration request
 type RegisterRequest struct {
@@ -27,8 +26,8 @@ type LoginRequest struct {
 
 // LoginResponse represents user login response
 type LoginResponse struct {
-	AccessToken  string    `json:"access_token" example:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."`
-	RefreshToken string    `json:"refresh_token" example:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."`
+	AccessToken  string `json:"access_token" example:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."`
+	RefreshToken string `json:"refresh_token" example:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."`
 }
 
 // RecoverPasswordRequest represents password recovery request
@@ -54,10 +53,32 @@ type ResetPasswordResponse struct {
 	Success bool   `json:"success" example:"true"`
 }
 
-type JWTClaims struct {
-	UserID   string `json:"user_id"`
-	Username string `json:"username"`
-	Email    string `json:"email"`
-	Role     string `json:"role"`
-	jwt.StandardClaims
+// ChangePasswordRequest represents password change request
+type ChangePasswordRequest struct {
+	CurrentPassword string `json:"current_password" validate:"required" example:"currentpassword123"`
+	NewPassword     string `json:"new_password" validate:"required,min=8,max=100" example:"newsecurepassword123"`
+	ConfirmPassword string `json:"confirm_password" validate:"required,eqfield=NewPassword" example:"newsecurepassword123"`
+}
+
+// ChangePasswordResponse represents password change response
+type ChangePasswordResponse struct {
+	Message string `json:"message" example:"Password changed successfully"`
+	Success bool   `json:"success" example:"true"`
+}
+
+// RefreshTokenRequest represents refresh token request
+type RefreshTokenRequest struct {
+	RefreshToken string `json:"refresh_token" validate:"required" example:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."`
+}
+
+// RefreshTokenResponse represents refresh token response
+type RefreshTokenResponse struct {
+	AccessToken string `json:"access_token" example:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."`
+	ExpiresIn   int    `json:"expires_in" example:"3600"`
+}
+
+// EmailConfirmationResponse represents email confirmation response
+type EmailConfirmationResponse struct {
+	Message string `json:"message" example:"Email confirmed successfully"`
+	Success bool   `json:"success" example:"true"`
 }

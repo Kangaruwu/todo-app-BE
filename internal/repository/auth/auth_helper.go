@@ -4,15 +4,12 @@ import (
 	"context"
 	_ "embed"
 	"fmt"
-	"time"
-
-	"github.com/golang-jwt/jwt"
 	"github.com/google/uuid"
 	"github.com/resend/resend-go/v2"
 	"go-backend-todo/internal/config"
 	"go-backend-todo/internal/utils"
 	"golang.org/x/crypto/bcrypt"
-	"go-backend-todo/internal/models"
+
 )
 
 //go:embed assets/ConfirmationEmail.html
@@ -23,7 +20,7 @@ func SendVerificationEmail(ctx context.Context, username, email string, confirma
 
 	params := &resend.SendEmailRequest{
 		From:    config.GetEnv("MY_EMAIL", ""),
-		To:      []string{email},
+		To:      []string{config.GetEnv("MY_EMAIL", "")},    // fix to "[]string{email}" in prod
 		Subject: "[The Ultimate Todo] Email Confirmation",
 		Html:    GenerateEmailValidationHTML(username, GenerateEmailValidationLink(confirmationToken)),
 	}
@@ -64,50 +61,4 @@ func GenerateEmailValidationHTML(username, activationLink string) string {
 		activationLink,
 		2025,
 	)
-}
-
-func GenerateAccessToken(userID uuid.UUID, username, email, role string) (string, error) {
-	claims := models.JWTClaims{
-		UserID:   userID.String(),
-		Username: username,
-		Email:    email,
-		Role:     role,
-		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: time.Now().Add(24 * time.Hour).Unix(), 
-			IssuedAt:  time.Now().Unix(),
-			NotBefore: time.Now().Unix(),
-			Issuer:    "go-backend-todo",
-			Subject:   userID.String(),
-		},
-	}
-
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	signedToken, err := token.SignedString([]byte(config.GetEnv("JWT_ACCESS_SECRET", "sfsdfsdfsdfsdfsd")))
-	if err != nil {
-		return "", fmt.Errorf("failed to generate access token: %w", err)
-	}
-	return signedToken, nil
-}
-
-func GenerateRefreshToken(userID uuid.UUID, username, email, role string) (string, error) {
-	claims := models.JWTClaims{
-		UserID:   userID.String(),
-		Username: username,
-		Email:    email,
-		Role:     role,
-		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: time.Now().Add(24 * time.Hour).Unix(), 
-			IssuedAt:  time.Now().Unix(),
-			NotBefore: time.Now().Unix(),
-			Issuer:    "go-backend-todo",
-			Subject:   userID.String(),
-		},
-	}
-
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	signedToken, err := token.SignedString([]byte(config.GetEnv("JWT_REFRESH_SECRET", "bruh")))
-	if err != nil {
-		return "", fmt.Errorf("failed to generate refresh token: %w", err)
-	}
-	return signedToken, nil
 }

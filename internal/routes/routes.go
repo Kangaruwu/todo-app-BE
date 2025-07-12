@@ -23,6 +23,7 @@ func SetupRoutes(app *fiber.App, cfg *config.Config, pool *pgxpool.Pool) {
 	app.Use(logger.New())
 	app.Use(recover.New())
 	app.Use(cors.New(config.GetCORSConfig(cfg)))
+	jwtManager := middlewares.NewJWTManager(cfg)
 
 	// Initialize repositories
 	todoRepo := todo_repository.NewTodoRepository(pool)
@@ -37,7 +38,7 @@ func SetupRoutes(app *fiber.App, cfg *config.Config, pool *pgxpool.Pool) {
 	// Initialize handlers
 	todoHandler := handlers.NewTodoHandler(todoService)
 	userHandler := handlers.NewUserHandler(userService)
-	authHandler := handlers.NewAuthHandler(authService)
+	authHandler := handlers.NewAuthHandler(authService, jwtManager)
 
 	// API routes
 	setupAPIRoutes(app, todoHandler, userHandler, authHandler)
@@ -56,6 +57,12 @@ func setupAPIRoutes(
 	userHandler *handlers.UserHandler,
 	authHandler *handlers.AuthHandler,
 ) {
+	app.Get("/health", func(c *fiber.Ctx) error {
+		return c.JSON(fiber.Map{
+			"status":  "ok",
+			"message": "Server is running",
+		})
+	})
 	// API group v1
 	api := app.Group("/api/v1")
 

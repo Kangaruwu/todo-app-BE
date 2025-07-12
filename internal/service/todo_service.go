@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"go-backend-todo/internal/models"
-	"go-backend-todo/internal/repository/todo"
+	todo_repository "go-backend-todo/internal/repository/todo"
 
 	"github.com/google/uuid"
 )
@@ -16,8 +16,9 @@ type TodoService interface {
 	GetTodoByID(ctx context.Context, id uuid.UUID, userID uuid.UUID) (*models.Todo, error)
 	UpdateTodo(ctx context.Context, id uuid.UUID, req models.UpdateTodoRequest, userID uuid.UUID) (*models.Todo, error)
 	DeleteTodo(ctx context.Context, id uuid.UUID, userID uuid.UUID) error
-	GetUserTodos(ctx context.Context, userID uuid.UUID, filter models.TodoFilter) ([]*models.Todo, error)
 	GetTodosWithPagination(ctx context.Context, userID uuid.UUID, limit, offset int, completed *bool) ([]*models.Todo, int64, error)
+	ToggleTodoStatus(ctx context.Context, id uuid.UUID, userID uuid.UUID) (*models.Todo, error)
+	GetTodoStats(ctx context.Context, userID uuid.UUID) (*models.TodoStatsResponse, error)
 	MarkTodosAsCompleted(ctx context.Context, ids []uuid.UUID, userID uuid.UUID) error
 	DeleteCompletedTodos(ctx context.Context, userID uuid.UUID) error
 }
@@ -42,10 +43,10 @@ func (s *todoService) CreateTodo(ctx context.Context, req models.CreateTodoReque
 	}
 
 	todo := &models.Todo{
-		Title:       req.Title,
-		Deadline:    req.Deadline,
-		Completed:   false,
-		UserID:      userID,
+		Title:     req.Title,
+		Deadline:  req.Deadline,
+		Completed: false,
+		UserID:    userID,
 	}
 
 	err := s.todoRepo.Create(ctx, todo)
@@ -160,6 +161,44 @@ func (s *todoService) GetTodosWithPagination(ctx context.Context, userID uuid.UU
 	}
 
 	return todos, total, nil
+}
+
+// ToggleTodoStatus toggles the completion status of a todo
+func (s *todoService) ToggleTodoStatus(ctx context.Context, id uuid.UUID, userID uuid.UUID) (*models.Todo, error) {
+	// Get current todo
+	todo, err := s.todoRepo.GetByID(ctx, id)
+	if err != nil {
+		return nil, fmt.Errorf("todo not found: %w", err)
+	}
+
+	// Check ownership
+	if todo.UserID != userID {
+		return nil, fmt.Errorf("unauthorized access to todo")
+	}
+
+	// Toggle status
+	newStatus := !todo.Completed
+	updateReq := models.UpdateTodoRequest{
+		Completed: &newStatus,
+	}
+
+	return s.UpdateTodo(ctx, id, updateReq, userID)
+}
+
+// GetTodoStats returns statistics about user's todos
+func (s *todoService) GetTodoStats(ctx context.Context, userID uuid.UUID) (*models.TodoStatsResponse, error) {
+	// TODO: Implement todo statistics
+	// This would typically involve counting todos by different criteria
+	stats := &models.TodoStatsResponse{
+		TotalTodos:     0,
+		CompletedTodos: 0,
+		PendingTodos:   0,
+		OverdueTodos:   0,
+		TodayTodos:     0,
+		ThisWeekTodos:  0,
+	}
+
+	return stats, nil
 }
 
 // MarkTodosAsCompleted marks multiple todos as completed
