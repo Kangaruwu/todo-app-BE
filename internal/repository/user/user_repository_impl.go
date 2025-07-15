@@ -4,7 +4,6 @@ import (
 	"context"
 	"go-backend-todo/internal/db"
 	"go-backend-todo/internal/models"
-	"go-backend-todo/internal/repository/auth"
 	"go-backend-todo/internal/utils"
 	"time"
 
@@ -23,35 +22,11 @@ func NewUserRepository(db *pgxpool.Pool) UserRepository {
 }
 
 // CRUD operations
-func (u *userRepository) Create(ctx context.Context, req *models.RegisterRequest) error {
-	exists, err := u.EmailExists(ctx, req.Email)
-	if err != nil {
-		return err
-	}
-	if exists {
-		return utils.ErrEmailAlreadyExists(req.Email)
-	}
-
-	exists, err = u.UsernameExists(ctx, req.Username)
-	if err != nil {
-		return err
-	}
-	if exists {
-		return utils.ErrUsernameAlreadyExists(req.Username)
-	}
-
+func (u *userRepository) Create(ctx context.Context, req *models.RegisterRequest, verificationToken string) error {
 	salt := utils.RandInRange(bcrypt.MinCost, bcrypt.MaxCost)
 	pw_hash, err := bcrypt.GenerateFromPassword([]byte(req.Password), salt)
 	if err != nil {
 		log.Println(err)
-	}
-
-	pool := db.GetPool()
-	// Create email validation token
-	confirmationToken, err := auth_repository.GenerateEmailValidationToken()
-	if err != nil {
-		log.Println("Error generating email validation token:", err)
-		return err
 	}
 
 	query := `
@@ -61,23 +36,16 @@ func (u *userRepository) Create(ctx context.Context, req *models.RegisterRequest
 			password_hash, 
 			hash_algorithm, 
 			email_address, 
-			confirmation_token, 
-			confirmation_token_generation_time, 
+			verification_token, 
+			verification_token_generation_time, 
 			email_validation_status)
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8);
 	`
-	_, err = pool.Exec(ctx, query, req.Username, "user", pw_hash, "bcrypt", req.Email, confirmationToken, time.Now(), "pending")
+	_, err = u.db.Exec(ctx, query, req.Username, "user", pw_hash, "bcrypt", req.Email, verificationToken, time.Now(), "pending")
 	if err != nil {
 		log.Println(err)
 		return err
 	}
-
-	//Send verification email
-	// err = auth_repository.SendVerificationEmail(ctx, req.Username, req.Email, confirmationToken)
-	// if err != nil {
-	// 	log.Println("Error sending verification email:", err)
-	// 	return err
-	// }
 
 	return nil
 }
@@ -146,4 +114,19 @@ func (u *userRepository) UsernameExists(ctx context.Context, username string) (b
 		return false, err
 	}
 	return exists, nil
+}
+
+func (u *userRepository) AccountStatusValidation(ctx context.Context, userID uuid.UUID) (bool, error) {
+	query := "SELECT email_validation_status FROM user_account WHERE user_id = $1;"
+	var status string
+	err := u.db.QueryRow(ctx, query, userID).Scan(&status)
+	if err != nil {
+		log.Println("Error checking account status:", err)
+		return false, err
+	}
+
+	if status == "active" {
+		return true, nil
+	}
+	return false, utils.ErrAccountNotActive("User account is not active")
 }

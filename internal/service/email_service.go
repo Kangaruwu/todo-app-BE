@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"log"
 	"net/smtp"
 
 	"go-backend-todo/internal/config"
@@ -67,25 +68,29 @@ func (s *emailService) SendHTMLEmail(ctx context.Context, to, subject, htmlBody 
 
 // SendVerificationEmail sends email verification email
 func (s *emailService) SendVerificationEmail(ctx context.Context, to, username, token string) error {
-	subject := "Please verify your email address"
+    log.Println("Verification token:", token)
+    return nil
+    // subject := "Please verify your email address"
 
-	htmlBody := s.getVerificationEmailTemplate(username, token)
+	// htmlBody := s.getVerificationEmailTemplate(username, token)
 
-	return s.SendHTMLEmail(ctx, to, subject, htmlBody)
+	// return s.SendHTMLEmail(ctx, to, subject, htmlBody)
 }
 
 // SendPasswordResetEmail sends password reset email
 func (s *emailService) SendPasswordResetEmail(ctx context.Context, to, username, token string) error {
-	subject := "Reset your password"
+    log.Println("Password reset token:", token)
+    return nil
+	// subject := "Reset your password"
 
-	htmlBody := s.getPasswordResetEmailTemplate(username, token)
+	// htmlBody := s.getPasswordResetEmailTemplate(username, token)
 
-	return s.SendHTMLEmail(ctx, to, subject, htmlBody)
+	// return s.SendHTMLEmail(ctx, to, subject, htmlBody)
 }
 
-// getVerificationEmailTemplate returns HTML template for email verification
+// GetVerificationEmailTemplate returns HTML template for email verification
 func (s *emailService) getVerificationEmailTemplate(username, token string) string {
-	verificationURL := fmt.Sprintf("http://localhost:3000/api/v1/auth/verify-email?token=%s", token)
+	verificationURL := fmt.Sprintf("http://localhost:8080/api/v1/auth/verify-email?token=%s", token)
 
 	template := `
 <!DOCTYPE html>
@@ -126,9 +131,10 @@ func (s *emailService) getVerificationEmailTemplate(username, token string) stri
 	return fmt.Sprintf(template, username, verificationURL, verificationURL, verificationURL)
 }
 
-// getPasswordResetEmailTemplate returns HTML template for password reset
+// GetPasswordResetEmailTemplate returns HTML template for password reset
+// TODO: for testing purposes , the function name has been changed to GetPasswordResetEmailTemplate (capitalized first letter 'G')
 func (s *emailService) getPasswordResetEmailTemplate(username, token string) string {
-	resetURL := fmt.Sprintf("http://localhost:3000/reset-password?token=%s", token)
+	resetURL := fmt.Sprintf("http://localhost:8080/api/v1/auth/reset-password?token=%s", token)
 
 	template := `
 <!DOCTYPE html>

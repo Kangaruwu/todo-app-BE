@@ -27,10 +27,10 @@ import (
 // @BasePath /api/v1
 // @schemes http https
 
-// @securityDefinitions.apikey Bearer
+// @securityDefinitions.apikey BearerAuth
 // @in header
 // @name Authorization
-// @description Type "Bearer" followed by a space and JWT token.
+// @description Enter JWT token with Bearer prefix (e.g., Bearer your_token_here)
 
 func main() {
 	// Load configuration

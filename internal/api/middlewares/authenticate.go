@@ -2,8 +2,13 @@ package middlewares
 
 import (
 	"strings"
+	"time"
+	"log"
+	"fmt"
 
 	"go-backend-todo/internal/config"
+	"go-backend-todo/internal/api/responses"
+	"go-backend-todo/internal/models"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v5"
@@ -14,17 +19,13 @@ func AuthenticateJWT(c *fiber.Ctx) error {
 	// Get token from Authorization header
 	authHeader := c.Get("Authorization")
 	if authHeader == "" {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-			"error": "Missing authorization header",
-		})
+		return responses.Unauthorized(c, "Authorization header is required")
 	}
 
 	// Check format "Bearer <token>"
 	tokenParts := strings.Split(authHeader, " ")
 	if len(tokenParts) != 2 || tokenParts[0] != "Bearer" {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-			"error": "Invalid authorization header format",
-		})
+		return responses.Unauthorized(c, "Invalid authorization format, expected 'Bearer <token>'")
 	}
 
 	tokenString := tokenParts[1]
@@ -32,9 +33,18 @@ func AuthenticateJWT(c *fiber.Ctx) error {
 	// Parse and validate token
 	claims, err := ParseJWT(tokenString)
 	if err != nil {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-			"error": "Invalid or expired token",
-		})
+		log.Printf("JWT Parse Error: %v", err)
+		return responses.Unauthorized(c, "Invalid or expired token")
+	}
+
+	// Check if token is expired
+	if claims.ExpiresAt.Before(time.Now()) {
+		return responses.Unauthorized(c, "Token has expired")
+	}
+
+	// Check if user account is active
+	if claims.EmailValidationStatus != string(models.EmailValidationStatusEnum("confirmed")) {
+		return responses.Unauthorized(c, "Email address is not verified")
 	}
 
 	// Save claims to context for use in handler
@@ -42,6 +52,7 @@ func AuthenticateJWT(c *fiber.Ctx) error {
 	c.Locals("username", claims.Username)
 	c.Locals("email", claims.Email)
 	c.Locals("role", claims.Role)
+	c.Locals("email_validation_status", claims.EmailValidationStatus)
 	c.Locals("claims", claims)
 
 	return c.Next()
@@ -49,19 +60,25 @@ func AuthenticateJWT(c *fiber.Ctx) error {
 
 // ParseJWT parse and validate JWT token
 func ParseJWT(tokenString string) (*JWTClaims, error) {
-	token, err := jwt.ParseWithClaims(tokenString, &JWTClaims{}, func(token *jwt.Token) (interface{}, error) {
-		return config.GetEnv("JWT_ACCESS_SECRET", ""), nil
-	})
+    cfg := config.Load() 
+    
+    token, err := jwt.ParseWithClaims(tokenString, &JWTClaims{}, func(token *jwt.Token) (interface{}, error) {
+        if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+            return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+        }
+        return []byte(cfg.JWT.AccessSecret), nil
+    })
 
-	if err != nil {
-		return nil, err
-	}
+    if err != nil {
+        log.Printf("JWT Parse Error: %v", err)
+        return nil, err
+    }
 
-	if claims, ok := token.Claims.(*JWTClaims); ok && token.Valid {
-		return claims, nil
-	}
+    if claims, ok := token.Claims.(*JWTClaims); ok && token.Valid {
+        return claims, nil
+    }
 
-	return nil, jwt.ErrSignatureInvalid
+    return nil, fmt.Errorf("invalid token claims")
 }
 
 // RequireRole middleware requires a specific role
@@ -69,15 +86,11 @@ func RequireRole(requiredRole string) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		role := c.Locals("role")
 		if role == nil {
-			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-				"error": "Unauthorized - no role found",
-			})
+			return responses.Unauthorized(c, "Unauthorized - no role found")
 		}
 
 		if role.(string) != requiredRole {
-			return c.Status(fiber.StatusForbidden).JSON(fiber.Map{
-				"error": "Forbidden - insufficient permissions",
-			})
+			return responses.Forbidden(c, "Forbidden - insufficient permissions")
 		}
 
 		return c.Next()
@@ -112,6 +125,7 @@ func OptionalAuth(c *fiber.Ctx) error {
 	c.Locals("username", claims.Username)
 	c.Locals("email", claims.Email)
 	c.Locals("role", claims.Role)
+	c.Locals("email_validation_status", claims.EmailValidationStatus)
 	c.Locals("claims", claims)
 
 	return c.Next()
@@ -142,3 +156,5 @@ func GetUserFromContext(c *fiber.Ctx) (*JWTClaims, bool) {
 // 	userID, _ := uuid.Parse(claims.UserID)
 // 	return GenerateAccessToken(userID, claims.Username, claims.Email, claims.Role)
 // }
+
+// CheckAccountStatus checks if the user account is active

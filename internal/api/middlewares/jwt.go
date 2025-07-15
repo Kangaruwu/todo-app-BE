@@ -22,20 +22,22 @@ func NewJWTManager(cfg *config.Config) *JWTManager {
 
 // JWTClaims represents JWT claims
 type JWTClaims struct {
-	UserID   string `json:"user_id"`
-	Username string `json:"username"`
-	Email    string `json:"email"`
-	Role     string `json:"role"`
+	UserID                string `json:"user_id"`
+	Username              string `json:"username"`
+	Email                 string `json:"email"`
+	Role                  string `json:"role"`
+	EmailValidationStatus string `json:"email_validation_status,omitempty"`
 	jwt.RegisteredClaims
 }
 
 // GenerateAccessToken generates access token
-func (j *JWTManager) GenerateAccessToken(userID uuid.UUID, username, email, role string) (string, error) {
+func (j *JWTManager) GenerateAccessToken(userID uuid.UUID, username, email, role, emailStatus string) (string, error) {
 	claims := JWTClaims{
 		UserID:   userID.String(),
 		Username: username,
 		Email:    email,
 		Role:     role,
+		EmailValidationStatus: emailStatus, 
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * time.Duration(j.cfg.JWT.AccessExpiryHour))),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
@@ -60,6 +62,32 @@ func (j *JWTManager) GenerateRefreshToken(userID uuid.UUID) (string, error) {
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	return token.SignedString([]byte(j.cfg.JWT.RefreshSecret))
+}
+
+// GenerateVerificationToken generates email verification token
+func (j *JWTManager) GenerateVerificationToken(email string) (string, error) {
+	claims := jwt.RegisteredClaims{
+		ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * 24)),
+		IssuedAt:  jwt.NewNumericDate(time.Now()),
+		Subject:   email,
+		Issuer:    j.cfg.App.Name,
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	return token.SignedString([]byte(j.cfg.JWT.VerificationSecret))
+}
+
+// GenerateRecoveryToken generates password recovery token
+func (j *JWTManager) GenerateRecoveryToken(email string) (string, error) {
+	claims := jwt.RegisteredClaims{
+		ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * 24)),
+		IssuedAt:  jwt.NewNumericDate(time.Now()),
+		Subject:   email,
+		Issuer:    j.cfg.App.Name,
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	return token.SignedString([]byte(j.cfg.JWT.RecoverySecret))
 }
 
 // ParseAccessToken parses and validates access token
@@ -95,7 +123,6 @@ func (j *JWTManager) ParseRefreshToken(tokenString string) (*jwt.RegisteredClaim
 
 	return nil, jwt.ErrSignatureInvalid
 }
-
 
 // GetUserIDFromContext gets user ID from context
 func GetUserIDFromContext(c *fiber.Ctx) (uuid.UUID, error) {

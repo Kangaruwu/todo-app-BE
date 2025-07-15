@@ -13,14 +13,14 @@ CREATE TABLE
         user_id UUID PRIMARY KEY DEFAULT uuid_generate_v4 (),
         user_name VARCHAR(20) NOT NULL UNIQUE,
         user_role user_role_enum NOT NULL DEFAULT 'user',
-        password_hash VaARCHAR(250) NOT NULL,
+        password_hash VARCHAR(250) NOT NULL,
         hash_algorithm VARCHAR(10) NOT NULL,
         email_address VARCHAR(100) NOT NULL,
-        confirmation_token VARCHAR(100),
-        confirmation_token_generation_time TIMESTAMP,
+        verification_token VARCHAR(100),
+        verification_token_generation_time TIMESTAMP,
         email_validation_status email_validation_status_enum NOT NULL DEFAULT 'unconfirmed',
         password_recovery_token VARCHAR(100),
-        recovery_token_time TIMESTAMP,
+        password_recovery_token_generation_time TIMESTAMP,
         created_at TIMESTAMP
         WITH
             TIME ZONE DEFAULT NOW (),

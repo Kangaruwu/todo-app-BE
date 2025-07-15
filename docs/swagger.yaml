@@ -184,35 +184,6 @@ info:
   title: Go Backend Todo API
   version: "1.0"
 paths:
-  /auth/confirm-email/{token}:
-    get:
-      consumes:
-      - application/json
-      description: Confirm user email with verification token
-      parameters:
-      - description: Email confirmation token
-        in: path
-        name: token
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/responses.SuccessResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/responses.ErrorResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/responses.ErrorResponse'
-      summary: Confirm email address
-      tags:
-      - Authentication
   /auth/login:
     post:
       consumes:
@@ -254,7 +225,7 @@ paths:
     post:
       consumes:
       - application/json
-      description: Send password recovery email
+      description: Send password reset email
       parameters:
       - description: Recovery email data
         in: body
@@ -338,6 +309,35 @@ paths:
           schema:
             $ref: '#/definitions/responses.ErrorResponse'
       summary: Reset password
+      tags:
+      - Authentication
+  /auth/verify-email/{token}:
+    get:
+      consumes:
+      - application/json
+      description: Verify user email with verification token
+      parameters:
+      - description: Email verification token
+        in: path
+        name: token
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/responses.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/responses.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/responses.ErrorResponse'
+      summary: Verify email address
       tags:
       - Authentication
   /todos:
@@ -1105,8 +1105,8 @@ schemes:
 - http
 - https
 securityDefinitions:
-  Bearer:
-    description: Type "Bearer" followed by a space and JWT token.
+  BearerAuth:
+    description: Enter JWT token with Bearer prefix (e.g., Bearer your_token_here)
     in: header
     name: Authorization
     type: apiKey

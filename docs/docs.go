@@ -24,50 +24,6 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/auth/confirm-email/{token}": {
-            "get": {
-                "description": "Confirm user email with verification token",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Authentication"
-                ],
-                "summary": "Confirm email address",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Email confirmation token",
-                        "name": "token",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/responses.SuccessResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/responses.ErrorResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/responses.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
         "/auth/login": {
             "post": {
                 "description": "Authenticate user with email and password",
@@ -125,7 +81,7 @@ const docTemplate = `{
         },
         "/auth/recover-password": {
             "post": {
-                "description": "Send password recovery email",
+                "description": "Send password reset email",
                 "consumes": [
                     "application/json"
                 ],
@@ -237,6 +193,50 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/models.ResetPasswordRequest"
                         }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/responses.SuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/responses.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/responses.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/verify-email/{token}": {
+            "get": {
+                "description": "Verify user email with verification token",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Verify email address",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Email verification token",
+                        "name": "token",
+                        "in": "path",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -1665,8 +1665,8 @@ const docTemplate = `{
         }
     },
     "securityDefinitions": {
-        "Bearer": {
-            "description": "Type \"Bearer\" followed by a space and JWT token.",
+        "BearerAuth": {
+            "description": "Enter JWT token with Bearer prefix (e.g., Bearer your_token_here)",
             "type": "apiKey",
             "name": "Authorization",
             "in": "header"

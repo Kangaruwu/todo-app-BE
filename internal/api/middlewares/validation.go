@@ -6,6 +6,8 @@ import (
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
+	"encoding/json"
+
 )
 
 // Validator instance
@@ -18,7 +20,7 @@ func ValidateStruct(s interface{}) error {
 		for _, err := range err.(validator.ValidationErrors) {
 			errors = append(errors, fmt.Sprintf("%s: %s", err.Field(), getValidationMessage(err)))
 		}
-		return fmt.Errorf(strings.Join(errors, ", "))
+		return fmt.Errorf("%s", strings.Join(errors, ", "))
 	}
 	return nil
 }
@@ -101,4 +103,19 @@ func GetValidatedBody(c *fiber.Ctx) interface{} {
 // GetValidatedQuery retrieves validated query from context
 func GetValidatedQuery(c *fiber.Ctx) interface{} {
 	return c.Locals("validated_query")
+}
+
+// RequestValidation middleware validates request body and query parameters
+func RequestValidation(body *[]byte, req interface{}) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		if err := json.Unmarshal(*body, req); err != nil {
+			return fmt.Errorf("Invalid request body: %s", err.Error())
+		}
+
+		if err := ValidateStruct(req); err != nil {
+			return fmt.Errorf("Validation error: %s", err.Error())
+		}
+
+		return c.Next()
+	}
 }

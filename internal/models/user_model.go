@@ -15,12 +15,12 @@ const (
 	UserRole  UserRoleEnum = "user"
 )
 
-type emailValidationStatusEnum string
+type EmailValidationStatusEnum string
 
 const (
-	UnconfirmedStatus emailValidationStatusEnum = "unconfirmed"
-	ConfirmedStatus   emailValidationStatusEnum = "confirmed"
-	PendingStatus     emailValidationStatusEnum = "pending"
+	UnconfirmedStatus EmailValidationStatusEnum = "unconfirmed"
+	ConfirmedStatus   EmailValidationStatusEnum = "confirmed"
+	PendingStatus     EmailValidationStatusEnum = "pending"
 )
 
 type UserAccount struct {
@@ -37,12 +37,12 @@ type UserLoginData struct {
 
 	EmailAddress string `json:"email_address" db:"email_address"`
 
-	ConfirmationToken     string                    `json:"confirmation_token" db:"confirmation_token"`
-	ConfirmationTokenTime time.Time                 `json:"confirmation_token_time" db:"confirmation_token_time"`
-	EmailValidationStatus emailValidationStatusEnum `json:"email_validation_status" db:"email_validation_status"`
+	VerificationToken      string                    `json:"verification_token" db:"verification_token"`
+	VerificationTokenTime  time.Time                 `json:"verification_token_time" db:"verification_token_time"`
+	EmailValidationStatus  EmailValidationStatusEnum `json:"email_validation_status" db:"email_validation_status"`
 
-	PasswordRecoveryToken string    `json:"password_recovery_token" db:"password_recovery_token"`
-	RecoveryTokenTime     time.Time `json:"recovery_token_time" db:"recovery_token_time"`
+	PasswordRecoveryToken  string    `json:"password_recovery_token" db:"password_recovery_token"`
+	RecoveryTokenTime      time.Time `json:"recovery_token_time" db:"recovery_token_time"`
 
 	CreatedAt time.Time `json:"created_at" db:"created_at"`
 	UpdatedAt time.Time `json:"updated_at" db:"updated_at"`
@@ -67,7 +67,7 @@ type UserProfile struct {
 	Username  string                    `json:"username" db:"user_name"`
 	Email     string                    `json:"email" db:"email_address"`
 	Role      UserRoleEnum              `json:"role" db:"user_role"`
-	Status    emailValidationStatusEnum `json:"email_status" db:"email_validation_status"`
+	Status    EmailValidationStatusEnum  `json:"email_status" db:"email_validation_status"`
 	CreatedAt time.Time                 `json:"created_at" db:"created_at"`
 	UpdatedAt time.Time                 `json:"updated_at" db:"updated_at"`
 }

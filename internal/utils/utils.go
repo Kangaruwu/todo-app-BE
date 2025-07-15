@@ -25,6 +25,10 @@ func ErrUsernameAlreadyExists(message string) error {
 	return fmt.Errorf("username already exists: %s", message)
 }
 
+func ErrAccountNotActive(message string) error {
+	return fmt.Errorf("account not active: %s", message)
+}
+
 func RandInRange(min, max int) int {
 	if min > max {
 		min, max = max, min

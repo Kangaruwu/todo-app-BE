@@ -31,9 +31,10 @@ func SetupRoutes(app *fiber.App, cfg *config.Config, pool *pgxpool.Pool) {
 	authRepo := auth_repository.NewAuthRepository(pool)
 
 	// Initialize services
+	emailService := service.NewEmailService(cfg)
 	todoService := service.NewTodoService(todoRepo)
 	userService := service.NewUserService(userRepo)
-	authService := service.NewAuthService(userRepo, authRepo)
+	authService := service.NewAuthService(userRepo, authRepo, emailService, cfg)
 
 	// Initialize handlers
 	todoHandler := handlers.NewTodoHandler(todoService)
@@ -57,12 +58,6 @@ func setupAPIRoutes(
 	userHandler *handlers.UserHandler,
 	authHandler *handlers.AuthHandler,
 ) {
-	app.Get("/health", func(c *fiber.Ctx) error {
-		return c.JSON(fiber.Map{
-			"status":  "ok",
-			"message": "Server is running",
-		})
-	})
 	// API group v1
 	api := app.Group("/api/v1")
 
@@ -75,6 +70,9 @@ func setupAPIRoutes(
 // setupTodoRoutes sets up todo-related routes with dependency injection
 func setupTodoRoutes(api fiber.Router, todoHandler *handlers.TodoHandler) {
 	todos := api.Group("/todos")
+
+	todos.Use(middlewares.AuthenticateJWT)	// Basic middleware for todos
+
 	todos.Get("/", todoHandler.GetTodos)
 	todos.Post("/", todoHandler.CreateTodo)
 	todos.Get("/:id", todoHandler.GetTodo)
@@ -96,6 +94,6 @@ func setupAuthRoutes(api fiber.Router, authHandler *handlers.AuthHandler) {
 	auth.Post("/login", authHandler.Login)
 	auth.Post("/register", authHandler.Register)
 	auth.Post("/recover-password", authHandler.RecoverPassword)
-	auth.Get("/reset-password", authHandler.ResetPassword)
-	auth.Get("/confirm-email/:token", authHandler.ConfirmEmail)
+	auth.Get("/reset-password/:token", authHandler.ResetPassword)
+	auth.Get("/verify-email/:token", authHandler.VerifyEmail)
 }

@@ -13,6 +13,7 @@ type Config struct {
 	JWT      JWTConfig
 	Email    EmailConfig
 	CORS     CORSConfig
+	Token    TokenConfig
 }
 
 // AppConfig holds application-specific configuration
@@ -41,10 +42,12 @@ type ServerConfig struct {
 
 // JWTConfig holds JWT configuration
 type JWTConfig struct {
-	AccessSecret     string
-	RefreshSecret    string
-	AccessExpiryHour int
-	RefreshExpiryDay int
+	AccessSecret     	string
+	RefreshSecret    	string
+	VerificationSecret 	string
+	RecoverySecret     	string
+	AccessExpiryHour 	int
+	RefreshExpiryDay 	int
 }
 
 // EmailConfig holds email configuration
@@ -64,6 +67,14 @@ type CORSConfig struct {
 	AllowHeaders     string
 	AllowCredentials bool
 }
+
+// TokenConfig holds token configuration
+type TokenConfig struct {
+	VerifyEmailTokenSecret string
+	VerifyEmailTokenTTL    int // in minutes
+	RecoverPasswordTokenSecret string
+	RecoverPasswordTokenTTL    int // in minutes
+}	
 
 // Load loads configuration from environment variables
 func Load() *Config {
@@ -90,8 +101,10 @@ func Load() *Config {
 			Port: GetEnv("SERVER_PORT", "8080"),
 		},
 		JWT: JWTConfig{
-			AccessSecret:     GetEnv("JWT_ACCESS_SECRET", "your-super-secret-access-key"),
-			RefreshSecret:    GetEnv("JWT_REFRESH_SECRET", "your-super-secret-refresh-key"),
+			AccessSecret:      	GetEnv("JWT_ACCESS_SECRET", "your-super-secret-access-key"),
+			RefreshSecret:     	GetEnv("JWT_REFRESH_SECRET", "your-super-secret-refresh-key"),
+			VerificationSecret: GetEnv("JWT_VERIFICATION_SECRET", "your-super-secret-verification-key"),
+			RecoverySecret:     GetEnv("JWT_RECOVERY_SECRET", "your-super-secret-recovery-key"),
 			AccessExpiryHour: getEnvAsInt("JWT_ACCESS_EXPIRY_HOUR", 24),
 			RefreshExpiryDay: getEnvAsInt("JWT_REFRESH_EXPIRY_DAY", 7),
 		},
@@ -108,6 +121,12 @@ func Load() *Config {
 			AllowMethods:     GetEnv("CORS_ALLOW_METHODS", "GET,POST,PUT,DELETE,OPTIONS,PATCH"),
 			AllowHeaders:     GetEnv("CORS_ALLOW_HEADERS", "Content-Type,Authorization,Accept,Origin,X-Requested-With"),
 			AllowCredentials: getEnvAsBool("CORS_ALLOW_CREDENTIALS", false), // Must be false when AllowOrigins is "*"
+		},
+		Token: TokenConfig{
+			VerifyEmailTokenSecret: GetEnv("VERIFY_EMAIL_TOKEN_SECRET", "your-super-secret-verify-email-key"),
+			VerifyEmailTokenTTL:    getEnvAsInt("VERIFY_EMAIL_TOKEN_TTL_MINUTES", 30), // Default 30 minutes
+			RecoverPasswordTokenSecret: GetEnv("RECOVER_PASSWORD_TOKEN_SECRET", "your-super-secret-recover-password-key"),
+			RecoverPasswordTokenTTL:    getEnvAsInt("RECOVER_PASSWORD_TOKEN_TTL_MINUTES", 30), // Default 30 minutes
 		},
 	}
 }
