@@ -1,9 +1,12 @@
 package middlewares
 
 import (
+	"context"
+	"log"
 	"time"
 
 	"go-backend-todo/internal/config"
+	user_repository "go-backend-todo/internal/repository/user"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v5"
@@ -12,12 +15,16 @@ import (
 
 // JWTManager handles JWT token operations
 type JWTManager struct {
-	cfg *config.Config
+	cfg      *config.Config
+	userRepo user_repository.UserRepository
 }
 
 // NewJWTManager creates a new JWT manager
-func NewJWTManager(cfg *config.Config) *JWTManager {
-	return &JWTManager{cfg: cfg}
+func NewJWTManager(cfg *config.Config, userRepo user_repository.UserRepository) *JWTManager {
+	return &JWTManager{
+		cfg:      cfg,
+		userRepo: userRepo,
+	}
 }
 
 // JWTClaims represents JWT claims
@@ -27,17 +34,19 @@ type JWTClaims struct {
 	Email                 string `json:"email"`
 	Role                  string `json:"role"`
 	EmailValidationStatus string `json:"email_validation_status,omitempty"`
+	TokenVersion          int    `json:"token_version"`
 	jwt.RegisteredClaims
 }
 
 // GenerateAccessToken generates access token
-func (j *JWTManager) GenerateAccessToken(userID uuid.UUID, username, email, role, emailStatus string) (string, error) {
+func (j *JWTManager) GenerateAccessToken(userID uuid.UUID, username, email, role, emailStatus string, tokenVersion int) (string, error) {
 	claims := JWTClaims{
-		UserID:   userID.String(),
-		Username: username,
-		Email:    email,
-		Role:     role,
-		EmailValidationStatus: emailStatus, 
+		UserID:                userID.String(),
+		Username:              username,
+		Email:                 email,
+		Role:                  role,
+		EmailValidationStatus: emailStatus,
+		TokenVersion:          tokenVersion,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * time.Duration(j.cfg.JWT.AccessExpiryHour))),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
@@ -101,6 +110,24 @@ func (j *JWTManager) ParseAccessToken(tokenString string) (*JWTClaims, error) {
 	}
 
 	if claims, ok := token.Claims.(*JWTClaims); ok && token.Valid {
+		// Validate token version
+		userID, err := uuid.Parse(claims.UserID)
+		if err != nil {
+			return nil, fiber.NewError(fiber.StatusUnauthorized, "Invalid user ID in token")
+		}
+
+		// Get current token version from database
+		currentVersion, err := j.userRepo.GetTokenVersion(context.Background(), userID)
+		if err != nil {
+			return nil, fiber.NewError(fiber.StatusUnauthorized, "Failed to validate token")
+		}
+
+		// Check if token version matches current version
+		if claims.TokenVersion != currentVersion {
+			log.Println("Token version mismatch:", claims.TokenVersion, "expected:", currentVersion)
+			return nil, fiber.NewError(fiber.StatusUnauthorized, "Token has been revoked")
+		}
+
 		return claims, nil
 	}
 

@@ -125,12 +125,6 @@ func (h *TodoHandler) CreateTodo(c *fiber.Ctx) error {
 // @Produce json
 // @Param id path string true "Todo ID" format(uuid)
 // @Security BearerAuth
-// @Success 200 {object} map[string]interface{} "Todo information"
-// @Failure 400 {object} map[string]string "Invalid todo ID format"
-// @Failure 401 {object} map[string]string "Unauthorized - missing or invalid token"
-// @Failure 403 {object} map[string]string "Forbidden - cannot access other user's todo"
-// @Failure 404 {object} map[string]string "Todo not found"
-// @Failure 500 {object} map[string]string "Internal server error"
 // @Router /todos/{id} [get]
 func (h *TodoHandler) GetTodo(c *fiber.Ctx) error {
 	// Lấy userID từ JWT token
@@ -162,12 +156,6 @@ func (h *TodoHandler) GetTodo(c *fiber.Ctx) error {
 // @Param id path string true "Todo ID" format(uuid)
 // @Param todo body models.UpdateTodoRequest true "Todo update data"
 // @Security BearerAuth
-// @Success 200 {object} map[string]interface{} "Todo updated successfully"
-// @Failure 400 {object} map[string]string "Invalid request data or todo ID format"
-// @Failure 401 {object} map[string]string "Unauthorized - missing or invalid token"
-// @Failure 403 {object} map[string]string "Forbidden - cannot update other user's todo"
-// @Failure 404 {object} map[string]string "Todo not found"
-// @Failure 500 {object} map[string]string "Internal server error"
 // @Router /todos/{id} [put]
 func (h *TodoHandler) UpdateTodo(c *fiber.Ctx) error {
 	// Lấy userID từ JWT token
@@ -208,12 +196,6 @@ func (h *TodoHandler) UpdateTodo(c *fiber.Ctx) error {
 // @Produce json
 // @Param id path string true "Todo ID" format(uuid)
 // @Security BearerAuth
-// @Success 200 {object} map[string]string "Todo deleted successfully"
-// @Failure 400 {object} map[string]string "Invalid todo ID format"
-// @Failure 401 {object} map[string]string "Unauthorized - missing or invalid token"
-// @Failure 403 {object} map[string]string "Forbidden - cannot delete other user's todo"
-// @Failure 404 {object} map[string]string "Todo not found"
-// @Failure 500 {object} map[string]string "Internal server error"
 // @Router /todos/{id} [delete]
 func (h *TodoHandler) DeleteTodo(c *fiber.Ctx) error {
 	// Lấy userID từ JWT token
@@ -244,12 +226,6 @@ func (h *TodoHandler) DeleteTodo(c *fiber.Ctx) error {
 // @Produce json
 // @Param id path string true "Todo ID" format(uuid)
 // @Security BearerAuth
-// @Success 200 {object} map[string]interface{} "Todo status toggled successfully"
-// @Failure 400 {object} map[string]string "Invalid todo ID format"
-// @Failure 401 {object} map[string]string "Unauthorized - missing or invalid token"
-// @Failure 403 {object} map[string]string "Forbidden - cannot modify other user's todo"
-// @Failure 404 {object} map[string]string "Todo not found"
-// @Failure 500 {object} map[string]string "Internal server error"
 // @Router /todos/{id}/toggle [patch]
 func (h *TodoHandler) ToggleTodoStatus(c *fiber.Ctx) error {
 	// TODO: Lấy userID từ JWT token hoặc session
@@ -290,10 +266,6 @@ func (h *TodoHandler) ToggleTodoStatus(c *fiber.Ctx) error {
 // @Param limit query int false "Number of items per page (default: 10)" minimum(1) maximum(100)
 // @Param offset query int false "Number of items to skip (default: 0)" minimum(0)
 // @Security BearerAuth
-// @Success 200 {object} map[string]interface{} "Filtered todos"
-// @Failure 400 {object} map[string]string "Invalid status parameter"
-// @Failure 401 {object} map[string]string "Unauthorized - missing or invalid token"
-// @Failure 500 {object} map[string]string "Internal server error"
 // @Router /todos/status/{status} [get]
 func (h *TodoHandler) GetTodosByStatus(c *fiber.Ctx) error {
 	// TODO: Lấy userID từ JWT token hoặc session
@@ -354,9 +326,6 @@ func (h *TodoHandler) GetTodosByStatus(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Success 200 {object} map[string]interface{} "Todo statistics"
-// @Failure 401 {object} map[string]string "Unauthorized - missing or invalid token"
-// @Failure 500 {object} map[string]string "Internal server error"
 // @Router /todos/stats [get]
 func (h *TodoHandler) GetTodoStats(c *fiber.Ctx) error {
 	// TODO: Lấy userID từ JWT token hoặc session

@@ -32,17 +32,16 @@ type UserLoginData struct {
 	UserID   uuid.UUID `json:"user_id" db:"user_id"`
 	Username string    `json:"user_name" db:"user_name"`
 
-	PasswordHash  string `json:"-" db:"password_hash"`  // not returned in JSON
-	HashAlgorithm string `json:"-" db:"hash_algorithm"` // not returned in JSON
+	PasswordHash string `json:"-" db:"password_hash"` // not returned in JSON
 
 	EmailAddress string `json:"email_address" db:"email_address"`
 
-	VerificationToken      string                    `json:"verification_token" db:"verification_token"`
-	VerificationTokenTime  time.Time                 `json:"verification_token_time" db:"verification_token_time"`
-	EmailValidationStatus  EmailValidationStatusEnum `json:"email_validation_status" db:"email_validation_status"`
+	VerificationToken     string                    `json:"verification_token" db:"verification_token"`
+	VerificationTokenTime time.Time                 `json:"verification_token_time" db:"verification_token_time"`
+	EmailValidationStatus EmailValidationStatusEnum `json:"email_validation_status" db:"email_validation_status"`
 
-	PasswordRecoveryToken  string    `json:"password_recovery_token" db:"password_recovery_token"`
-	RecoveryTokenTime      time.Time `json:"recovery_token_time" db:"recovery_token_time"`
+	PasswordRecoveryToken string    `json:"password_recovery_token" db:"password_recovery_token"`
+	RecoveryTokenTime     time.Time `json:"recovery_token_time" db:"recovery_token_time"`
 
 	CreatedAt time.Time `json:"created_at" db:"created_at"`
 	UpdatedAt time.Time `json:"updated_at" db:"updated_at"`
@@ -63,13 +62,15 @@ type UpdateUserRequest struct {
 
 // UserProfile represents user profile information
 type UserProfile struct {
-	UserID    uuid.UUID                 `json:"user_id" db:"user_id"`
-	Username  string                    `json:"username" db:"user_name"`
-	Email     string                    `json:"email" db:"email_address"`
-	Role      UserRoleEnum              `json:"role" db:"user_role"`
-	Status    EmailValidationStatusEnum  `json:"email_status" db:"email_validation_status"`
-	CreatedAt time.Time                 `json:"created_at" db:"created_at"`
-	UpdatedAt time.Time                 `json:"updated_at" db:"updated_at"`
+	UserID       uuid.UUID                 `json:"user_id" db:"user_id"`
+	Username     string                    `json:"username" db:"user_name"`
+	PasswordHash string                    `json:"-" db:"password_hash"` // not returned in JSON
+	Email        string                    `json:"email" db:"email_address"`
+	Role         UserRoleEnum              `json:"role" db:"user_role"`
+	Status       EmailValidationStatusEnum `json:"email_status" db:"email_validation_status"`
+	TokenVersion int                       `json:"-" db:"token_version"`
+	CreatedAt    time.Time                 `json:"created_at" db:"created_at"`
+	UpdatedAt    time.Time                 `json:"updated_at" db:"updated_at"`
 }
 
 // UpdateProfileRequest represents profile update request

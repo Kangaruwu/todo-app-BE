@@ -4,6 +4,8 @@ import (
 	"context"
 	"go-backend-todo/internal/models"
 	user_repository "go-backend-todo/internal/repository/user"
+	"go-backend-todo/internal/utils"
+	"log"
 
 	"github.com/google/uuid"
 )
@@ -14,6 +16,7 @@ type UserService interface {
 	UpdateUserProfile(ctx context.Context, userID uuid.UUID, req models.UpdateProfileRequest) (*models.UserProfile, error)
 	DeleteUser(ctx context.Context, userID uuid.UUID) error
 	GetUserStats(ctx context.Context) (*models.UserStatsResponse, error)
+	ChangePassword(ctx context.Context, userID uuid.UUID, req *models.ChangePasswordRequest) error
 }
 
 type userService struct {
@@ -27,8 +30,7 @@ func NewUserService(userRepo user_repository.UserRepository) UserService {
 }
 
 func (s *userService) GetUserByID(ctx context.Context, userID uuid.UUID) (*models.UserProfile, error) {
-	// TODO: Implement get user by ID
-	return nil, nil
+	return s.userRepo.GetByID(ctx, userID)
 }
 
 func (s *userService) GetAllUsers(ctx context.Context, limit, offset int) ([]*models.UserProfile, int64, error) {
@@ -57,3 +59,41 @@ func (s *userService) GetUserStats(ctx context.Context) (*models.UserStatsRespon
 	}
 	return stats, nil
 }
+
+// ChangePassword changes the user's password
+func (s *userService) ChangePassword(ctx context.Context, userID uuid.UUID, req *models.ChangePasswordRequest) error {
+    log.Println("Changing password for user:", userID, "Request:", req)
+    // 1. Validate input structure
+    if req.NewPassword != req.ConfirmPassword {
+        return utils.ErrInvalidInput("New password and confirm password do not match")
+    }
+
+    // 2. Validate password strength
+    if err := s.userRepo.ValidatePasswordStrength(req.NewPassword); err != nil {
+        return err
+    }
+
+    // 3. Verify current password
+    user, err := s.userRepo.GetByID(ctx, userID)
+    if err != nil {
+        return utils.ErrInternalServerError("Failed to get user")
+    }
+
+    if !s.userRepo.VerifyPassword(req.CurrentPassword, user.PasswordHash) {
+        return utils.ErrInvalidCredentials("Current password is incorrect")
+    }
+
+    // // 4. Check password history (prevent reuse)
+    // if err := s.checkPasswordHistory(ctx, userID, req.NewPassword); err != nil {
+    //     return err
+    // }
+
+    // 5. Hash and update password
+    hashedPassword, err := s.userRepo.HashPassword(req.NewPassword)
+    if err != nil {
+        return utils.ErrInternalServerError("Failed to hash password")
+    }
+
+    return s.userRepo.UpdatePassword(ctx, userID, hashedPassword)
+}
+

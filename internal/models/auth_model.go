@@ -8,7 +8,7 @@ import (
 type RegisterRequest struct {
 	Username string `json:"username" validate:"required,min=3,max=50" example:"john_doe"`
 	Email    string `json:"email" validate:"required,email" example:"john@example.com"`
-	Password string `json:"password" validate:"required,min=8" example:"securepassword123"`
+	Password string `json:"password" validate:"required,min=8" example:"Securep@ssword123"`
 }
 
 // RegisterResponse represents user registration response
@@ -21,7 +21,7 @@ type RegisterResponse struct {
 // LoginRequest represents user login request
 type LoginRequest struct {
 	Email    string `json:"email" validate:"required,email" example:"john@example.com"`
-	Password string `json:"password" validate:"required,min=8" example:"securepassword123"`
+	Password string `json:"password" validate:"required,min=8" example:"Securep@ssword123"`
 }
 
 // LoginResponse represents user login response
@@ -44,7 +44,7 @@ type RecoverPasswordResponse struct {
 // ResetPasswordRequest represents password reset request
 type ResetPasswordRequest struct {
 	Token       string `json:"token" validate:"required" example:"recovery_token_123"`
-	NewPassword string `json:"new_password" validate:"required,min=8" example:"newsecurepassword123"`
+	NewPassword string `json:"new_password" validate:"required,min=8" example:"Newsecurep@ssword123"`
 }
 
 // ResetPasswordResponse represents password reset response
@@ -55,9 +55,9 @@ type ResetPasswordResponse struct {
 
 // ChangePasswordRequest represents password change request
 type ChangePasswordRequest struct {
-	CurrentPassword string `json:"current_password" validate:"required" example:"currentpassword123"`
-	NewPassword     string `json:"new_password" validate:"required,min=8,max=100" example:"newsecurepassword123"`
-	ConfirmPassword string `json:"confirm_password" validate:"required,eqfield=NewPassword" example:"newsecurepassword123"`
+	CurrentPassword string `json:"current_password" validate:"required" example:"Securep@ssword123"`
+	NewPassword     string `json:"new_password" validate:"required,min=8,max=100" example:"Newsecurep@ssword123"`
+	ConfirmPassword string `json:"confirm_password" validate:"required,eqfield=NewPassword" example:"Newsecurep@ssword123"`
 }
 
 // ChangePasswordResponse represents password change response

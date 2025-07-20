@@ -29,6 +29,18 @@ func ErrAccountNotActive(message string) error {
 	return fmt.Errorf("account not active: %s", message)
 }
 
+func ErrUserNotFound(message string) error {
+	return fmt.Errorf("user not found: %s", message)
+}
+
+func ErrUnauthorized(message string) error {
+	return fmt.Errorf("unauthorized: %s", message)
+}
+
+func ErrInvalidInput(message string) error {
+	return fmt.Errorf("invalid input: %s", message)
+}
+
 func RandInRange(min, max int) int {
 	if min > max {
 		min, max = max, min

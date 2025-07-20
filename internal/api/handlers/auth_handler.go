@@ -6,8 +6,9 @@ import (
 	"go-backend-todo/internal/models"
 	"go-backend-todo/internal/service"
 
-	"github.com/gofiber/fiber/v2"
 	"log"
+
+	"github.com/gofiber/fiber/v2"
 )
 
 // AuthHandler handles authentication HTTP requests
@@ -31,10 +32,6 @@ func NewAuthHandler(authService service.AuthService, jwtManager *middlewares.JWT
 // @Accept json
 // @Produce json
 // @Param credentials body models.LoginRequest true "Login credentials"
-// @Success 200 {object} models.LoginResponse "Login successful"
-// @Failure 400 {object} map[string]interface{} "Invalid request data"
-// @Failure 401 {object} map[string]interface{} "Invalid credentials"
-// @Failure 500 {object} map[string]interface{} "Internal server error"
 // @Router /auth/login [post]
 func (h *AuthHandler) Login(c *fiber.Ctx) error {
 	var req models.LoginRequest
@@ -49,7 +46,7 @@ func (h *AuthHandler) Login(c *fiber.Ctx) error {
 	}
 
 	// Generate tokens
-	accessToken, err := h.jwtManager.GenerateAccessToken(user.UserID, user.Username, user.Email, string(user.Role), string(user.Status))
+	accessToken, err := h.jwtManager.GenerateAccessToken(user.UserID, user.Username, user.Email, string(user.Role), string(user.Status), user.TokenVersion)
 	if err != nil {
 		return responses.InternalServerError(c, "Failed to generate access token")
 	}
@@ -74,9 +71,6 @@ func (h *AuthHandler) Login(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param request body models.RegisterRequest true "User registration data"
-// @Success 201 {object} models.RegisterResponse
-// @Failure 400 {object} responses.ErrorResponse
-// @Failure 409 {object} responses.ErrorResponse
 // @Router /auth/register [post]
 func (h *AuthHandler) Register(c *fiber.Ctx) error {
 	body := c.Body()
@@ -112,9 +106,6 @@ func (h *AuthHandler) Register(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param token path string true "Email verification token"
-// @Success 200 {object} responses.SuccessResponse
-// @Failure 400 {object} responses.ErrorResponse
-// @Failure 404 {object} responses.ErrorResponse
 // @Router /auth/verify-email/{token} [get]
 func (h *AuthHandler) VerifyEmail(c *fiber.Ctx) error {
 	token := c.Params("token")
@@ -136,9 +127,6 @@ func (h *AuthHandler) VerifyEmail(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param request body models.RecoverPasswordRequest true "Recovery email data"
-// @Success 200 {object} responses.SuccessResponse
-// @Failure 400 {object} responses.ErrorResponse
-// @Failure 404 {object} responses.ErrorResponse
 // @Router /auth/recover-password [post]
 func (h *AuthHandler) RecoverPassword(c *fiber.Ctx) error {
 	var req models.RecoverPasswordRequest
@@ -166,9 +154,6 @@ func (h *AuthHandler) RecoverPassword(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param request body models.ResetPasswordRequest true "Password reset data"
-// @Success 200 {object} responses.SuccessResponse
-// @Failure 400 {object} responses.ErrorResponse
-// @Failure 404 {object} responses.ErrorResponse
 // @Router /auth/reset-password [post]
 func (h *AuthHandler) ResetPassword(c *fiber.Ctx) error {
 	var req models.ResetPasswordRequest

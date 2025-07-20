@@ -46,7 +46,22 @@ func (s *authService) Login(ctx context.Context, req *models.LoginRequest) (*mod
 		}
 		return nil, err
 	}
-	return user, nil
+
+	// Increment token version to invalidate all existing tokens
+	err = s.userRepo.IncrementTokenVersion(ctx, user.UserID)
+	if err != nil {
+		log.Printf("Failed to increment token version for user %s: %v", user.UserID, err)
+		// Don't fail login, just log the error
+	}
+
+	// Get updated user with new token version
+	updatedUser, err := s.userRepo.GetByID(ctx, user.UserID)
+	if err != nil {
+		log.Printf("Failed to get updated user after token increment: %v", err)
+		return user, nil // Return original user if can't get updated one
+	}
+
+	return updatedUser, nil
 }
 
 func (s *authService) Register(ctx context.Context, req *models.RegisterRequest, verificationToken string) error {
@@ -65,6 +80,11 @@ func (s *authService) Register(ctx context.Context, req *models.RegisterRequest,
 	}
 	if exists {
 		return utils.ErrUsernameAlreadyExists(req.Username)
+	}
+
+	// Password strength validation
+	if err := s.userRepo.ValidatePasswordStrength(req.Password); err != nil {
+		return err
 	}
 
 	// Create user account

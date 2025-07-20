@@ -14,12 +14,11 @@ CREATE TABLE
         user_name VARCHAR(20) NOT NULL UNIQUE,
         user_role user_role_enum NOT NULL DEFAULT 'user',
         password_hash VARCHAR(250) NOT NULL,
-        hash_algorithm VARCHAR(10) NOT NULL,
         email_address VARCHAR(100) NOT NULL,
-        verification_token VARCHAR(100),
+        verification_token VARCHAR(250),
         verification_token_generation_time TIMESTAMP,
         email_validation_status email_validation_status_enum NOT NULL DEFAULT 'unconfirmed',
-        password_recovery_token VARCHAR(100),
+        password_recovery_token VARCHAR(250),
         password_recovery_token_generation_time TIMESTAMP,
         created_at TIMESTAMP
         WITH
@@ -85,7 +84,6 @@ INSERT INTO
         user_name,
         user_role,
         password_hash,
-        hash_algorithm,
         email_address,
         email_validation_status
     )
@@ -94,7 +92,6 @@ VALUES
         'BaoNguyxn',
         'admin',
         'hashed_password',
-        'bcrypt',
         'admin@example.com',
         'confirmed'
     );

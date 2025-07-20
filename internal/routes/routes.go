@@ -23,12 +23,14 @@ func SetupRoutes(app *fiber.App, cfg *config.Config, pool *pgxpool.Pool) {
 	app.Use(logger.New())
 	app.Use(recover.New())
 	app.Use(cors.New(config.GetCORSConfig(cfg)))
-	jwtManager := middlewares.NewJWTManager(cfg)
 
 	// Initialize repositories
 	todoRepo := todo_repository.NewTodoRepository(pool)
 	userRepo := user_repository.NewUserRepository(pool)
 	authRepo := auth_repository.NewAuthRepository(pool)
+
+	// Initialize JWT manager with userRepo
+	jwtManager := middlewares.NewJWTManager(cfg, userRepo)
 
 	// Initialize services
 	emailService := service.NewEmailService(cfg)
@@ -42,7 +44,7 @@ func SetupRoutes(app *fiber.App, cfg *config.Config, pool *pgxpool.Pool) {
 	authHandler := handlers.NewAuthHandler(authService, jwtManager)
 
 	// API routes
-	setupAPIRoutes(app, todoHandler, userHandler, authHandler)
+	setupAPIRoutes(app, todoHandler, userHandler, authHandler, jwtManager)
 
 	// Swagger documentation
 	app.Get("/swagger/*", fiberSwagger.WrapHandler)
@@ -57,21 +59,22 @@ func setupAPIRoutes(
 	todoHandler *handlers.TodoHandler,
 	userHandler *handlers.UserHandler,
 	authHandler *handlers.AuthHandler,
+	jwtManager *middlewares.JWTManager,
 ) {
 	// API group v1
 	api := app.Group("/api/v1")
 
 	// Setup routes with dependency injection
-	setupTodoRoutes(api, todoHandler)
-	setupUserRoutes(api, userHandler)
+	setupTodoRoutes(api, todoHandler, jwtManager)
+	setupUserRoutes(api, userHandler, jwtManager)
 	setupAuthRoutes(api, authHandler)
 }
 
 // setupTodoRoutes sets up todo-related routes with dependency injection
-func setupTodoRoutes(api fiber.Router, todoHandler *handlers.TodoHandler) {
+func setupTodoRoutes(api fiber.Router, todoHandler *handlers.TodoHandler, jwtManager *middlewares.JWTManager) {
 	todos := api.Group("/todos")
 
-	todos.Use(middlewares.AuthenticateJWT)	// Basic middleware for todos
+	todos.Use(middlewares.AuthenticateJWT(jwtManager)) // Use JWT manager middleware
 
 	todos.Get("/", todoHandler.GetTodos)
 	todos.Post("/", todoHandler.CreateTodo)
@@ -81,11 +84,15 @@ func setupTodoRoutes(api fiber.Router, todoHandler *handlers.TodoHandler) {
 }
 
 // setupUserRoutes sets up user-related routes with dependency injection
-func setupUserRoutes(api fiber.Router, userHandler *handlers.UserHandler) {
+func setupUserRoutes(api fiber.Router, userHandler *handlers.UserHandler, jwtManager *middlewares.JWTManager) {
 	users := api.Group("/users")
-	users.Get("/profile", userHandler.GetUser)
-	users.Put("/profile", userHandler.UpdateUser)
-	users.Delete("/profile", userHandler.DeleteUser)
+
+	users.Use(middlewares.AuthenticateJWT(jwtManager)) // Use JWT manager middleware
+
+	users.Get("/profile", userHandler.GetUserProfile)
+	users.Put("/profile", userHandler.UpdateUserProfile)
+	users.Delete("/profile", userHandler.DeleteUserProfile)
+	users.Put("/change-password", userHandler.ChangePassword)
 }
 
 // setupAuthRoutes sets up authentication-related routes with dependency injection
