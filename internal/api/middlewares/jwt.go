@@ -38,6 +38,12 @@ type JWTClaims struct {
 	jwt.RegisteredClaims
 }
 
+// RefreshJWTClaims represents JWT claims for refresh token
+type RefreshJWTClaims struct {
+	TokenVersion int `json:"token_version"`
+	jwt.RegisteredClaims
+}
+
 // GenerateAccessToken generates access token
 func (j *JWTManager) GenerateAccessToken(userID uuid.UUID, username, email, role, emailStatus string, tokenVersion int) (string, error) {
 	claims := JWTClaims{
@@ -61,12 +67,15 @@ func (j *JWTManager) GenerateAccessToken(userID uuid.UUID, username, email, role
 }
 
 // GenerateRefreshToken generates refresh token
-func (j *JWTManager) GenerateRefreshToken(userID uuid.UUID) (string, error) {
-	claims := jwt.RegisteredClaims{
-		ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * 24 * time.Duration(j.cfg.JWT.RefreshExpiryDay))),
-		IssuedAt:  jwt.NewNumericDate(time.Now()),
-		Subject:   userID.String(),
-		Issuer:    j.cfg.App.Name,
+func (j *JWTManager) GenerateRefreshToken(userID uuid.UUID, tokenVersion int) (string, error) {
+	claims := JWTClaims{
+		TokenVersion: tokenVersion,
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * 24 * time.Duration(j.cfg.JWT.RefreshExpiryDay))),
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
+			Subject:   userID.String(),
+			Issuer:    j.cfg.App.Name,
+		},
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
@@ -135,8 +144,8 @@ func (j *JWTManager) ParseAccessToken(tokenString string) (*JWTClaims, error) {
 }
 
 // ParseRefreshToken parses and validates refresh token
-func (j *JWTManager) ParseRefreshToken(tokenString string) (*jwt.RegisteredClaims, error) {
-	token, err := jwt.ParseWithClaims(tokenString, &jwt.RegisteredClaims{}, func(token *jwt.Token) (interface{}, error) {
+func (j *JWTManager) ParseRefreshToken(tokenString string) (*RefreshJWTClaims, error) {
+	token, err := jwt.ParseWithClaims(tokenString, &RefreshJWTClaims{}, func(token *jwt.Token) (interface{}, error) {
 		return []byte(j.cfg.JWT.RefreshSecret), nil
 	})
 
@@ -144,7 +153,7 @@ func (j *JWTManager) ParseRefreshToken(tokenString string) (*jwt.RegisteredClaim
 		return nil, err
 	}
 
-	if claims, ok := token.Claims.(*jwt.RegisteredClaims); ok && token.Valid {
+	if claims, ok := token.Claims.(*RefreshJWTClaims); ok && token.Valid {
 		return claims, nil
 	}
 
@@ -164,4 +173,52 @@ func GetUserIDFromContext(c *fiber.Ctx) (uuid.UUID, error) {
 	}
 
 	return userID, nil
+}
+
+
+// RefreshAccessToken refreshes the access token, also returning new refresh token
+// This function rotates the refresh token on every refresh
+func (j *JWTManager) RefreshAccessToken(refreshToken string) (string, string, error) {
+	// Parse the refresh token
+	claims, err := j.ParseRefreshToken(refreshToken)
+	if err != nil {
+		return "", "", fiber.NewError(fiber.StatusUnauthorized, "Invalid refresh token: "+err.Error())
+	}
+
+	// Get user ID from claims
+	userID := claims.Subject
+
+	// Check token version
+	currentVersion, err := j.userRepo.GetTokenVersion(context.Background(), uuid.MustParse(userID))
+	if err != nil {
+		return "", "", fiber.NewError(fiber.StatusUnauthorized, "Failed to get current token version: "+err.Error())
+	}
+	if currentVersion != claims.TokenVersion {
+		return "", "", fiber.NewError(fiber.StatusUnauthorized, "Token has been revoked or version mismatch")
+	}
+
+	// Increment token version in the database
+	err = j.userRepo.IncrementTokenVersion(context.Background(), uuid.MustParse(userID))
+	if err != nil {
+		return "", "", fiber.NewError(fiber.StatusUnauthorized, "Failed to increment token version: "+err.Error())
+	}
+
+	user, err := j.userRepo.GetByID(context.Background(), uuid.MustParse(userID))
+	if err != nil {
+		return "", "", fiber.NewError(fiber.StatusUnauthorized, "Failed to get user: "+err.Error())
+	}
+
+	// Generate new access token
+	newAccessToken, err := j.GenerateAccessToken(uuid.MustParse(userID), claims.Subject, claims.Subject, string(user.Role), string(user.Status), user.TokenVersion)
+	if err != nil {
+		return "", "", fiber.NewError(fiber.StatusInternalServerError, "Failed to generate new access token: "+err.Error())
+	}
+
+	// Generate new refresh token (Refresh token rotates on every refresh)
+	newRefreshToken, err := j.GenerateRefreshToken(uuid.MustParse(userID), user.TokenVersion)
+	if err != nil {
+		return "", "", fiber.NewError(fiber.StatusInternalServerError, "Failed to generate new refresh token: "+err.Error())
+	}
+
+	return newAccessToken, newRefreshToken, nil
 }

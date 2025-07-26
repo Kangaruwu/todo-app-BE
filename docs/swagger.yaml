@@ -51,6 +51,14 @@ definitions:
     required:
     - email
     type: object
+  models.RefreshAccessTokenRequest:
+    properties:
+      refresh_token:
+        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        type: string
+    required:
+    - refresh_token
+    type: object
   models.RegisterRequest:
     properties:
       email:
@@ -140,6 +148,19 @@ paths:
       summary: User login
       tags:
       - Authentication
+  /auth/logout:
+    post:
+      consumes:
+      - application/json
+      description: Log out the currently authenticated user
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - BearerAuth: []
+      summary: User logout
+      tags:
+      - Authentication
   /auth/recover-password:
     post:
       consumes:
@@ -156,6 +177,24 @@ paths:
       - application/json
       responses: {}
       summary: Password recovery
+      tags:
+      - Authentication
+  /auth/refresh-token:
+    post:
+      consumes:
+      - application/json
+      description: Refresh the access token for the currently authenticated user
+      parameters:
+      - description: Refresh token data
+        in: body
+        name: token
+        required: true
+        schema:
+          $ref: '#/definitions/models.RefreshAccessTokenRequest'
+      produces:
+      - application/json
+      responses: {}
+      summary: Refresh access token
       tags:
       - Authentication
   /auth/register:

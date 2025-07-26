@@ -82,3 +82,15 @@ type EmailConfirmationResponse struct {
 	Message string `json:"message" example:"Email confirmed successfully"`
 	Success bool   `json:"success" example:"true"`
 }
+
+// RefreshAccessTokenRequest represents request to refresh access token
+type RefreshAccessTokenRequest struct {
+	RefreshToken string `json:"refresh_token" validate:"required" example:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."`
+}
+
+// RefreshAccessTokenResponse represents response for access token refresh
+type RefreshAccessTokenResponse struct {
+	AccessToken string `json:"access_token" example:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."`
+	RefreshToken string `json:"refresh_token" example:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."` // refresh token rotated
+}	
+

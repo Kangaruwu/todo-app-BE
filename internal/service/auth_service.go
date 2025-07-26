@@ -2,11 +2,11 @@ package service
 
 import (
 	"context"
+	"go-backend-todo/internal/config"
+	"go-backend-todo/internal/models"
+	"go-backend-todo/internal/utils"
 	"log"
 	"time"
-	"go-backend-todo/internal/utils"
-	"go-backend-todo/internal/models"
-	"go-backend-todo/internal/config"
 
 	auth_repository "go-backend-todo/internal/repository/auth"
 	user_repository "go-backend-todo/internal/repository/user"
@@ -105,20 +105,20 @@ func (s *authService) Register(ctx context.Context, req *models.RegisterRequest,
 }
 
 func (s *authService) VerifyEmail(ctx context.Context, verificationToken string) error {
-    createdAt, err := s.authRepo.GetTokenCreationTime(ctx, verificationToken, true)
-    if err != nil {
-        return err
-    }
-    
-    if createdAt.Add(time.Duration(s.config.Token.VerifyEmailTokenTTL) * time.Minute).Before(time.Now()) {
-        log.Printf("Token is too old: %s", verificationToken)
-        return utils.ErrInvalidCredentials("Token has expired")
-    }
+	createdAt, err := s.authRepo.GetTokenCreationTime(ctx, verificationToken, true)
+	if err != nil {
+		return err
+	}
+
+	if createdAt.Add(time.Duration(s.config.Token.VerifyEmailTokenTTL) * time.Minute).Before(time.Now()) {
+		log.Printf("Token is too old: %s", verificationToken)
+		return utils.ErrInvalidCredentials("Token has expired")
+	}
 	return s.authRepo.VerifyEmail(ctx, verificationToken)
 }
 
 func (s *authService) RecoverPassword(ctx context.Context, req *models.RecoverPasswordRequest, recoverToken string) error {
-	// TODO: Send recovery email with the token
+	// TODO: Send recovery email with the token, but setup the mail server first
 	// if err := s.emailService.SendPasswordResetEmail(ctx, req.Email, ..., recoverToken); err != nil {
 	// 	log.Println("Error sending recovery email:", err)
 	// 	return err
@@ -127,16 +127,15 @@ func (s *authService) RecoverPassword(ctx context.Context, req *models.RecoverPa
 }
 
 func (s *authService) ResetPassword(ctx context.Context, req *models.ResetPasswordRequest) error {
-    createdAt, err := s.authRepo.GetTokenCreationTime(ctx, req.Token, false)
-    if err != nil {
-        return err
-    }
-    
-    if createdAt.Add(time.Duration(s.config.Token.RecoverPasswordTokenTTL) * time.Minute).Before(time.Now()) {
-        log.Printf("Token is too old: %s", req.Token)
-        return utils.ErrInvalidCredentials("Token has expired")
-    }
-	
+	createdAt, err := s.authRepo.GetTokenCreationTime(ctx, req.Token, false)
+	if err != nil {
+		return err
+	}
+
+	if createdAt.Add(time.Duration(s.config.Token.RecoverPasswordTokenTTL) * time.Minute).Before(time.Now()) {
+		log.Printf("Token is too old: %s", req.Token)
+		return utils.ErrInvalidCredentials("Token has expired")
+	}
+
 	return s.authRepo.ResetPassword(ctx, req)
 }
-

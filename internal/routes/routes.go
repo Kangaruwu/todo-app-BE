@@ -67,14 +67,14 @@ func setupAPIRoutes(
 	// Setup routes with dependency injection
 	setupTodoRoutes(api, todoHandler, jwtManager)
 	setupUserRoutes(api, userHandler, jwtManager)
-	setupAuthRoutes(api, authHandler)
+	setupAuthRoutes(api, authHandler, jwtManager)
 }
 
 // setupTodoRoutes sets up todo-related routes with dependency injection
 func setupTodoRoutes(api fiber.Router, todoHandler *handlers.TodoHandler, jwtManager *middlewares.JWTManager) {
 	todos := api.Group("/todos")
 
-	todos.Use(middlewares.AuthenticateJWT(jwtManager)) // Use JWT manager middleware
+	todos.Use(middlewares.AuthenticateJWT(jwtManager)) 
 
 	todos.Get("/", todoHandler.GetTodos)
 	todos.Post("/", todoHandler.CreateTodo)
@@ -87,7 +87,7 @@ func setupTodoRoutes(api fiber.Router, todoHandler *handlers.TodoHandler, jwtMan
 func setupUserRoutes(api fiber.Router, userHandler *handlers.UserHandler, jwtManager *middlewares.JWTManager) {
 	users := api.Group("/users")
 
-	users.Use(middlewares.AuthenticateJWT(jwtManager)) // Use JWT manager middleware
+	users.Use(middlewares.AuthenticateJWT(jwtManager)) 
 
 	users.Get("/profile", userHandler.GetUserProfile)
 	users.Put("/profile", userHandler.UpdateUserProfile)
@@ -96,11 +96,16 @@ func setupUserRoutes(api fiber.Router, userHandler *handlers.UserHandler, jwtMan
 }
 
 // setupAuthRoutes sets up authentication-related routes with dependency injection
-func setupAuthRoutes(api fiber.Router, authHandler *handlers.AuthHandler) {
+func setupAuthRoutes(api fiber.Router, authHandler *handlers.AuthHandler, jwtManager *middlewares.JWTManager) {
 	auth := api.Group("/auth")
 	auth.Post("/login", authHandler.Login)
 	auth.Post("/register", authHandler.Register)
 	auth.Post("/recover-password", authHandler.RecoverPassword)
 	auth.Get("/reset-password/:token", authHandler.ResetPassword)
 	auth.Get("/verify-email/:token", authHandler.VerifyEmail)
+	auth.Post("/refresh-token", authHandler.RefreshAccessToken)
+
+	auth.Use(middlewares.AuthenticateJWT(jwtManager))  
+
+	auth.Post("/logout", authHandler.Logout)
 }

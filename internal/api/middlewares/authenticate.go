@@ -123,16 +123,3 @@ func GetUserFromContext(c *fiber.Ctx) (*JWTClaims, bool) {
 	return nil, false
 }
 
-// // RefreshToken creates a new token from the old token
-// func RefreshToken(oldTokenString string) (string, error) {
-// 	claims, err := ParseJWT(oldTokenString)
-// 	if err != nil {
-// 		return "", err
-// 	}
-
-// 	// Create a new token with a new expiration time
-// 	userID, _ := uuid.Parse(claims.UserID)
-// 	return GenerateAccessToken(userID, claims.Username, claims.Email, claims.Role)
-// }
-
-// CheckAccountStatus checks if the user account is active

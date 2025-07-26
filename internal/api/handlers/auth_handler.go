@@ -51,7 +51,7 @@ func (h *AuthHandler) Login(c *fiber.Ctx) error {
 		return responses.InternalServerError(c, "Failed to generate access token")
 	}
 
-	refreshToken, err := h.jwtManager.GenerateRefreshToken(user.UserID)
+	refreshToken, err := h.jwtManager.GenerateRefreshToken(user.UserID, user.TokenVersion)
 	if err != nil {
 		return responses.InternalServerError(c, "Failed to generate refresh token")
 	}
@@ -171,4 +171,53 @@ func (h *AuthHandler) ResetPassword(c *fiber.Ctx) error {
 		return responses.InternalServerError(c, "Failed to reset password: "+err.Error())
 	}
 	return responses.OK(c, "Password reset successfully", nil)
+}
+
+// Logout handles user logout
+// @Summary User logout
+// @Description Log out the currently authenticated user
+// @Tags Authentication
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Router /auth/logout [post]
+func (h *AuthHandler) Logout(c *fiber.Ctx) error {
+	c.Locals("user_id", nil)
+	c.Locals("username", nil)
+	c.Locals("email", nil)
+	c.Locals("role", nil)
+	c.Locals("email_validation_status", nil)
+	c.Locals("claims", nil)
+	return responses.OK(c, "Logged out successfully", nil)
+}
+
+// RefreshAccessToken handles access token refresh
+// @Summary Refresh access token
+// @Description Refresh the access token for the currently authenticated user
+// @Tags Authentication
+// @Accept json
+// @Produce json
+// @Param token body models.RefreshAccessTokenRequest true "Refresh token data"
+// @Router /auth/refresh-token [post]
+func (h *AuthHandler) RefreshAccessToken(c *fiber.Ctx) error {
+	var req models.RefreshAccessTokenRequest
+	body := c.Body()
+	if err := middlewares.RequestValidation(&body, &req)(c); err != nil {
+		return responses.BadRequestWithError(c, "Invalid request body", err)
+	}
+	if req.RefreshToken == "" {
+		return responses.BadRequest(c, "Refresh token is required")
+	}
+	
+	newAccessToken, newRefreshToken, err := h.jwtManager.RefreshAccessToken(req.RefreshToken)
+	if err != nil {
+		return responses.InternalServerError(c, "Failed to refresh access token: "+err.Error())
+	}
+	
+	response := models.RefreshAccessTokenResponse{
+		AccessToken:  newAccessToken,
+		RefreshToken: newRefreshToken,
+	}
+
+	return responses.OK(c, "Access token refreshed successfully", response)
 }
