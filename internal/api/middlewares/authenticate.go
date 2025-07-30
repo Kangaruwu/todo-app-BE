@@ -60,12 +60,12 @@ func AuthenticateJWT(jwtManager *JWTManager) fiber.Handler {
 // RequireRole middleware requires a specific role
 func RequireRole(requiredRole string) fiber.Handler {
 	return func(c *fiber.Ctx) error {
-		role := c.Locals("role")
-		if role == nil {
+		role, err := GetRoleFromContext(c)
+		if err != nil {
 			return responses.Unauthorized(c, "Unauthorized - no role found")
 		}
 
-		if role.(string) != requiredRole {
+		if role != requiredRole {
 			return responses.Forbidden(c, "Forbidden - insufficient permissions")
 		}
 
@@ -109,17 +109,5 @@ func OptionalAuth(jwtManager *JWTManager) fiber.Handler {
 	}
 }
 
-// GetUserFromContext retrieves user information from context
-func GetUserFromContext(c *fiber.Ctx) (*JWTClaims, bool) {
-	claims := c.Locals("claims")
-	if claims == nil {
-		return nil, false
-	}
 
-	if jwtClaims, ok := claims.(*JWTClaims); ok {
-		return jwtClaims, true
-	}
-
-	return nil, false
-}
 

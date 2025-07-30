@@ -160,20 +160,6 @@ func (j *JWTManager) ParseRefreshToken(tokenString string) (*RefreshJWTClaims, e
 	return nil, jwt.ErrSignatureInvalid
 }
 
-// GetUserIDFromContext gets user ID from context
-func GetUserIDFromContext(c *fiber.Ctx) (uuid.UUID, error) {
-	userIDStr := c.Locals("user_id")
-	if userIDStr == nil {
-		return uuid.Nil, fiber.NewError(fiber.StatusUnauthorized, "User ID not found in context")
-	}
-
-	userID, err := uuid.Parse(userIDStr.(string))
-	if err != nil {
-		return uuid.Nil, fiber.NewError(fiber.StatusBadRequest, "Invalid user ID format")
-	}
-
-	return userID, nil
-}
 
 
 // RefreshAccessToken refreshes the access token, also returning new refresh token

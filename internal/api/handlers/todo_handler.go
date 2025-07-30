@@ -228,33 +228,25 @@ func (h *TodoHandler) DeleteTodo(c *fiber.Ctx) error {
 // @Security BearerAuth
 // @Router /todos/{id}/toggle [patch]
 func (h *TodoHandler) ToggleTodoStatus(c *fiber.Ctx) error {
-	// TODO: Lấy userID từ JWT token hoặc session
-	// userID := uuid.New() // Thay bằng userID thực từ auth
+	userID, err := middlewares.GetUserIDFromContext(c)
+	if err != nil {
+		return responses.Unauthorized(c, "User not authenticated")
+	}
 
-	// idStr := c.Params("id")
-	// id, err := uuid.Parse(idStr)
-	// if err != nil {
-	// 	return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-	// 		"error": "Invalid todo ID",
-	// 	})
-	// }
+	idStr := c.Params("id")
+	id, err := uuid.Parse(idStr)
+	if err != nil {
+		return responses.BadRequest(c, "Invalid todo ID format")
+	}
 
-	// todo, err := h.todoService.ToggleTodoStatus(c.Context(), id, userID)
-	// if err != nil {
-	// 	return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-	// 		"error": err.Error(),
-	// 	})
-	// }
+	todo, err := h.todoService.ToggleTodoStatus(c.Context(), id, userID)
+	if err != nil {
+		return responses.BadRequest(c, "Failed to toggle todo status")
+	}
 
-	// return c.JSON(fiber.Map{
-	// 	"message": "Todo status toggled successfully",
-	// 	"data":    todo,
-	// })
-	return c.JSON(fiber.Map{
-		"message": "Toggle todo status is not implemented yet",
-		"data":    nil,
-	})
+	return responses.OK(c, "Todo status toggled successfully", todo)
 }
+
 
 // GetTodosByStatus gets todos filtered by completion status
 // @Summary Get todos by completion status

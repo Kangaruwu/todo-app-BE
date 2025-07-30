@@ -41,6 +41,10 @@ func ErrInvalidInput(message string) error {
 	return fmt.Errorf("invalid input: %s", message)
 }
 
+func ErrTimeout(message string) error {
+	return fmt.Errorf("timeout: %s", message)
+}
+
 func RandInRange(min, max int) int {
 	if min > max {
 		min, max = max, min

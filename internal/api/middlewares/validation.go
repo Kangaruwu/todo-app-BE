@@ -49,71 +49,15 @@ func getValidationMessage(err validator.FieldError) string {
 	}
 }
 
-// ValidateBody middleware validates request body
-func ValidateBody(model interface{}) fiber.Handler {
-	return func(c *fiber.Ctx) error {
-		if err := c.BodyParser(model); err != nil {
-			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-				"error":   "Invalid request body format",
-				"success": false,
-			})
-		}
-
-		if err := ValidateStruct(model); err != nil {
-			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-				"error":   err.Error(),
-				"success": false,
-			})
-		}
-
-		// Store parsed and validated data in context
-		c.Locals("validated_body", model)
-		return c.Next()
-	}
-}
-
-// ValidateQuery validates query parameters
-func ValidateQuery(model interface{}) fiber.Handler {
-	return func(c *fiber.Ctx) error {
-		if err := c.QueryParser(model); err != nil {
-			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-				"error":   "Invalid query parameters",
-				"success": false,
-			})
-		}
-
-		if err := ValidateStruct(model); err != nil {
-			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-				"error":   err.Error(),
-				"success": false,
-			})
-		}
-
-		// Store parsed and validated data in context
-		c.Locals("validated_query", model)
-		return c.Next()
-	}
-}
-
-// GetValidatedBody retrieves validated body from context
-func GetValidatedBody(c *fiber.Ctx) interface{} {
-	return c.Locals("validated_body")
-}
-
-// GetValidatedQuery retrieves validated query from context
-func GetValidatedQuery(c *fiber.Ctx) interface{} {
-	return c.Locals("validated_query")
-}
-
 // RequestValidation middleware validates request body and query parameters
 func RequestValidation(body *[]byte, req interface{}) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		if err := json.Unmarshal(*body, req); err != nil {
-			return fmt.Errorf("Invalid request body: %s", err.Error())
+			return fmt.Errorf("invalid request body: %s", err.Error())
 		}
 
 		if err := ValidateStruct(req); err != nil {
-			return fmt.Errorf("Validation error: %s", err.Error())
+			return fmt.Errorf("validation error: %s", err.Error())
 		}
 
 		return c.Next()

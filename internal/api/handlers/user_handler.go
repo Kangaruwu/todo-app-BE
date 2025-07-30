@@ -6,8 +6,6 @@ import (
 	"go-backend-todo/internal/models"
 	"go-backend-todo/internal/service"
 
-	"github.com/google/uuid"
-
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -30,7 +28,12 @@ func NewUserHandler(userService service.UserService) *UserHandler {
 // @Security BearerAuth
 // @Router /users/profile [get]
 func (h *UserHandler) GetUserProfile(c *fiber.Ctx) error {
-	user, err := h.userService.GetUserByID(c.Context(), uuid.MustParse(c.Locals("user_id").(string)))
+	userID, err := middlewares.GetUserIDFromContext(c)
+	if err != nil {
+		return responses.Unauthorized(c, "User not authenticated")
+	}
+
+	user, err := h.userService.GetUserByID(c.Context(), userID)
 	if err != nil {
 		return responses.InternalServerErrorWithError(c, "Failed to get user", err)
 	}
@@ -52,7 +55,12 @@ func (h *UserHandler) UpdateUserProfile(c *fiber.Ctx) error {
 		return responses.BadRequestWithError(c, "Invalid request data", err)
 	}
 
-	user, err := h.userService.UpdateUserProfile(c.Context(), uuid.MustParse(c.Locals("user_id").(string)), req)
+	userID, err := middlewares.GetUserIDFromContext(c)
+	if err != nil {
+		return responses.Unauthorized(c, "User not authenticated")
+	}
+
+	user, err := h.userService.UpdateUserProfile(c.Context(), userID, req)
 	if err != nil {
 		return responses.InternalServerErrorWithError(c, "Failed to update user", err)
 	}
@@ -75,7 +83,13 @@ func (h *UserHandler) ChangePassword(c *fiber.Ctx) error {
 	if err != nil {
 		return responses.BadRequestWithError(c, "Invalid request body", err)
 	}
-	err = h.userService.ChangePassword(c.Context(), uuid.MustParse(c.Locals("user_id").(string)), &req)
+
+	userID, err := middlewares.GetUserIDFromContext(c)
+	if err != nil {
+		return responses.Unauthorized(c, "User not authenticated")
+	}
+
+	err = h.userService.ChangePassword(c.Context(), userID, &req)
 	if err != nil {
 		return responses.InternalServerErrorWithError(c, "Failed to change password", err)
 	}
@@ -91,7 +105,6 @@ func (h *UserHandler) ChangePassword(c *fiber.Ctx) error {
 // @Security BearerAuth
 // @Router /users/profile [delete]
 func (h *UserHandler) DeleteUserProfile(c *fiber.Ctx) error {
-	// userID := uuid.MustParse(c.Locals("user_id").(string))
 	// TODO: Implement logic to delete current user's account
 	return responses.OK(c, "User account deleted successfully", nil)
 }
